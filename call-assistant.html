@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Call Assistant · OVB</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0d2244;
+  --navy2:#122a52;
+  --navy3:#1a3460;
+  --pink:#e04578;
+  --pink2:#ea6e96;
+  --teal:#5bbfc2;
+  --teal2:#3da5a8;
+  --purple:#8b6bae;
+  --white:#ffffff;
+  --muted:#7a97c4;
+  --border:rgba(255,255,255,0.1);
+  --r:14px;--rs:8px;
+}
+html,body{
+  height:100%;min-height:100dvh;
+  background-color:var(--navy);
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--white);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  overflow:hidden;
+}
+
+/* SCREENS */
+.screen{display:none;height:100dvh;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+
+/* HEADER */
+.hdr{
+  display:flex;align-items:center;gap:10px;
+  padding:13px 16px;flex-shrink:0;
+  background:rgba(13,34,68,0.92);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(10px);
+}
+.hdr-info{flex:1;min-width:0}
+.hdr-title{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.btn-back{
+  background:rgba(255,255,255,0.08);border:1px solid var(--border);
+  color:var(--white);border-radius:var(--rs);
+  padding:7px 11px;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;gap:4px;flex-shrink:0;
+}
+.btn-back:active{opacity:.7}
+
+/* ════════════ HOME ════════════ */
+#home .body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:28px 20px;gap:16px}
+.logo{text-align:center;margin-bottom:8px}
+.logo-name{
+  font-size:28px;font-weight:900;letter-spacing:-0.5px;
+  background:linear-gradient(135deg,var(--teal),var(--pink));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.logo-tag{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.mode-card{
+  border-radius:var(--r);padding:20px 18px;cursor:pointer;
+  border:2px solid transparent;transition:border-color .15s,transform .1s;
+  background:var(--navy2);position:relative;overflow:hidden;
+}
+.mode-card::after{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);
+  background-size:20px 20px;pointer-events:none;
+}
+.mode-card:active{transform:scale(.98)}
+.mode-card.atom{border-color:var(--teal2)}
+.mode-card.halado{border-color:var(--purple)}
+.mc-icon{font-size:32px;margin-bottom:8px}
+.mc-title{font-size:19px;font-weight:800;margin-bottom:4px}
+.mc-title.t{color:var(--teal)}
+.mc-title.p{color:var(--pink)}
+.mc-desc{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* ════════════ CALL TYPE ════════════ */
+#calltype .body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px}
+.slabel{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.type-card{
+  background:var(--navy2);border:1px solid var(--border);
+  border-radius:var(--r);padding:15px;
+  cursor:pointer;display:flex;align-items:center;gap:13px;
+  transition:border-color .1s;
+}
+.type-card:active{border-color:var(--pink)}
+.tc-icon{font-size:24px;flex-shrink:0}
+.tc-name{font-size:15px;font-weight:600;margin-bottom:2px}
+.tc-sub{font-size:12px;color:var(--muted)}
+.tc-arr{color:var(--muted);font-size:20px;margin-left:auto;flex-shrink:0}
+
+/* ════════════ ACTIVE CALL – STORY ════════════ */
+#activecall{position:relative}
+#activecall .body{flex:1;overflow-y:auto;display:flex;flex-direction:column;padding:16px 16px 100px}
+
+/* PROGRESS */
+.progress-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 16px 8px;flex-shrink:0;
+  background:rgba(13,34,68,0.7);border-bottom:1px solid var(--border);
+}
+.prog-dots{display:flex;gap:5px;align-items:center;flex:1}
+.prog-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .2s;flex-shrink:0}
+.prog-dot.done{background:var(--teal2)}
+.prog-dot.active{background:var(--pink);width:22px;border-radius:4px;box-shadow:0 0 6px rgba(224,69,120,.5)}
+.prog-label{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* YOU SAY CARD */
+.you-card{
+  background:var(--navy2);
+  border:1.5px solid var(--pink);
+  border-radius:var(--r);padding:18px 16px;
+  box-shadow:0 0 24px rgba(224,69,120,.12);
+  margin-bottom:18px;flex-shrink:0;
+}
+.you-label{
+  display:flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--pink);margin-bottom:11px;
+}
+.you-label::before{content:'🗣️';font-size:14px}
+.you-text{
+  font-size:15px;line-height:1.75;color:var(--white);
+  white-space:pre-wrap;
+}
+.you-text .hl{color:var(--pink2);font-weight:600}
+.you-text .hl-t{color:var(--teal);font-weight:600}
+.you-text .var{
+  background:rgba(224,69,120,.15);color:var(--pink2);
+  border-radius:4px;padding:1px 5px;font-style:italic;
+}
+.tip-box{
+  margin-top:12px;padding:10px 12px;
+  background:rgba(224,154,42,.08);border:1px solid rgba(224,154,42,.25);
+  border-radius:var(--rs);font-size:12px;color:#e0c070;line-height:1.6;
+  white-space:pre-wrap;
+}
+
+/* SUCCESS STATE */
+.you-card.success{
+  border-color:var(--teal);
+  box-shadow:0 0 24px rgba(91,191,194,.15);
+}
+.you-card.success .you-label{color:var(--teal)}
+.success-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--teal2);color:white;
+  border-radius:20px;padding:4px 12px;
+  font-size:12px;font-weight:700;margin-bottom:12px;
+}
+.btn-restart{
+  width:100%;margin-top:14px;padding:13px;
+  background:rgba(91,191,194,.15);border:1px solid var(--teal2);
+  color:var(--teal);border-radius:var(--rs);
+  font-size:14px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-restart:active{opacity:.75}
+
+/* REACTIONS */
+.reactions-section{flex-shrink:0}
+.reactions-label{
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.reactions-label::before{content:'💬';font-size:13px}
+.reactions-list{display:flex;flex-direction:column;gap:8px}
+.react-btn{
+  width:100%;background:var(--navy2);
+  border:1px solid var(--border);border-radius:var(--rs);
+  padding:13px 14px;text-align:left;
+  color:var(--white);font-size:14px;font-weight:500;line-height:1.4;
+  cursor:pointer;transition:border-color .1s,background .1s;
+  display:flex;align-items:center;gap:10px;
+}
+.react-btn:active{border-color:var(--pink);background:var(--navy3)}
+.react-btn .rb-quote{
+  flex:1;font-size:13px;color:var(--muted);font-style:italic;
+}
+.react-btn .rb-icon{font-size:18px;flex-shrink:0}
+.react-btn .rb-arr{color:var(--muted);font-size:16px;flex-shrink:0;margin-left:auto}
+.react-btn.branch{border-color:var(--teal2);color:var(--teal)}
+.react-btn.branch .rb-quote{color:var(--teal2)}
+
+/* BRANCH NODE (advisor chooses direction) */
+.branch-label{
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--teal);margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.branch-label::before{content:'🔀';font-size:13px}
+
+/* FAB */
+.obj-fab{
+  position:fixed;bottom:20px;right:16px;
+  background:var(--pink);color:white;border:none;
+  border-radius:50px;padding:13px 18px;
+  font-size:14px;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 20px rgba(224,69,120,.55);
+  z-index:50;display:none;align-items:center;gap:7px;
+}
+.obj-fab:active{transform:scale(.95)}
+
+/* ════════════ MODAL ════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(5,12,35,.85);
+  backdrop-filter:blur(4px);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:16px;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--navy2);border:1px solid var(--border);
+  border-radius:16px;width:100%;max-width:520px;max-height:84dvh;
+  display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 1px rgba(224,69,120,.15);
+  overflow:hidden;position:relative;
+}
+.modal::before{
+  content:'';position:absolute;inset:0;border-radius:16px;
+  background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);
+  background-size:20px 20px;pointer-events:none;z-index:0;
+}
+.modal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:15px 18px 13px;border-bottom:1px solid var(--border);
+  flex-shrink:0;position:relative;z-index:1;
+}
+.modal-hdr h2{font-size:15px;font-weight:700}
+.modal-close{
+  background:rgba(255,255,255,.08);border:none;color:var(--muted);
+  border-radius:50%;width:28px;height:28px;font-size:15px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.modal-close:active{background:rgba(255,255,255,.15)}
+.modal-body{flex:1;overflow-y:auto;padding:16px 18px 22px;position:relative;z-index:1}
+
+/* OBJ LIST */
+.obj-list{display:flex;flex-direction:column;gap:7px}
+.obj-row{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:var(--rs);padding:12px 13px;
+  cursor:pointer;display:flex;align-items:center;gap:11px;
+  color:var(--white);width:100%;text-align:left;font-size:14px;
+  transition:background .1s;
+}
+.obj-row:active{background:rgba(224,69,120,.1)}
+.obj-row .ri{font-size:20px;flex-shrink:0}
+.obj-row .rl{flex:1;font-weight:600}
+.obj-row .ra{color:var(--muted)}
+.back-btn{
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  color:var(--muted);border-radius:var(--rs);
+  padding:9px 12px;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;margin-bottom:14px;width:100%;
+}
+.script-block{
+  background:rgba(255,255,255,.05);border-left:3px solid var(--pink);
+  border-radius:0 var(--rs) var(--rs) 0;
+  padding:12px 13px;margin-bottom:9px;
+  font-size:14px;line-height:1.7;color:var(--white);
+}
+.script-block.t{border-left-color:var(--teal)}
+.script-block.tip{border-left-color:#e09a2a;background:rgba(224,154,42,.07);font-size:13px;color:#e0c070}
+.otag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  margin:12px 0 6px;display:block}
+.otag:first-child{margin-top:0}
+.otag.pink{color:var(--pink)}
+.otag.teal{color:var(--teal)}
+.otag.muted{color:var(--muted)}
+.trig{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:var(--rs);padding:10px 12px;font-size:13px;
+  color:var(--muted);font-style:italic;margin-bottom:8px;line-height:1.5;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ HOME ══════════ -->
+<div class="screen active" id="home">
+  <div class="hdr" style="justify-content:center;border-bottom:2px solid var(--pink)">
+    <div style="text-align:center">
+      <div class="logo-name">📞 Call Assistant</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:3px">OVB · Hívás segédlet</div>
+    </div>
+  </div>
+  <div class="body">
+    <div style="text-align:center;color:var(--muted);font-size:13px;padding:0 0 4px">Válassz módot a hívás előtt</div>
+    <div class="mode-card atom" onclick="selectMode('atom')">
+      <div class="mc-icon">🌱</div>
+      <div class="mc-title t">ATOM KEZDŐ</div>
+      <div class="mc-desc">Ismerősi körből egyeztetsz · Első hívások · Gyakorló script</div>
+    </div>
+    <div class="mode-card halado" onclick="selectMode('halado')">
+      <div class="mc-icon">🎯</div>
+      <div class="mc-title p">HALADÓ</div>
+      <div class="mc-desc">Ajánlásból dolgozol · Szerviz · Tanácsadás · Ajánláskérés</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CALL TYPE ══════════ -->
+<div class="screen" id="calltype">
+  <div class="hdr">
+    <button class="btn-back" onclick="goHome()">← Vissza</button>
+    <div class="hdr-info">
+      <div class="hdr-title" id="ct-title"></div>
+      <div class="hdr-sub" id="ct-sub"></div>
+    </div>
+  </div>
+  <div class="body" id="ct-list"></div>
+</div>
+
+<!-- ══════════ ACTIVE CALL ══════════ -->
+<div class="screen" id="activecall">
+  <div class="hdr">
+    <button class="btn-back" onclick="goBack()">← Vissza</button>
+    <div class="hdr-info">
+      <div class="hdr-title" id="ac-title"></div>
+      <div class="hdr-sub" id="ac-sub">Kövesed a szálat – kattints a reakcióra</div>
+    </div>
+  </div>
+  <div class="progress-bar" id="progress-bar">
+    <div class="prog-dots" id="prog-dots"></div>
+    <div class="prog-label" id="prog-label"></div>
+  </div>
+  <div class="body" id="ac-body"></div>
+  <button class="obj-fab" id="obj-fab" onclick="openObjMenu()">⚡ Kifogás</button>
+</div>
+
+<!-- ══════════ MODAL ══════════ -->
+<div class="modal-overlay" id="modal" onclick="closeModalOut(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-hdr">
+      <h2 id="modal-title">Script</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// STORY DATA  (node-based decision tree)
+// ══════════════════════════════════════════════
+
+// reactions with next:'__OBJ_X' open the objection modal
+// type:'branch' = advisor chooses direction (not client reaction)
+// type:'success' = end of call, success state
+
+const STORIES = {
+
+  // ── ATOM: EGYETEMISTA ──────────────────────
+  'atom-uni': {
+    title: 'Egyetemista · Saját kontakt',
+    totalSteps: 5,
+    start: 'nyito',
+    nodes: {
+      nyito: {
+        step:1, label:'Nyitó',
+        you:'Szia! Jókor hívlak, van szabad 2 perced?',
+        reactions:[
+          {icon:'😊', text:'"Persze, mondd csak!"', next:'pitch'},
+          {icon:'🤔', text:'"Attól függ, miről van szó..."', next:'pitch'},
+          {icon:'⏱️', text:'"Most nem érek rá."', next:'__OBJ_IDO'},
+        ]
+      },
+      pitch: {
+        step:2, label:'Pitch',
+        you:'Volna egy gyors kérdésem – elkezdtem egy gazdasági cégnél <span class="hl">elemző gyakornokként</span> dolgozni, és meg szerettelek volna kérdezni, hogy a jövő héten rám tudnál-e szánni <span class="hl">1 órát</span>, ahol egy gyakornoki elemzést el tudnék készíteni veled?\n\nLesz belőle egy elég komplex vizsgám, amire a szakmai vezetőmmel készülök jelenleg – az a feladatom, hogy vegyesen <span class="hl">minden korosztályból és különböző szakmák szerint</span> jól begyakoroljam a folyamatokat.',
+        reactions:[
+          {icon:'✅', text:'"Persze simán! Mikor?"', next:'idopont'},
+          {icon:'❓', text:'"Mit kell csinálnom?"', next:'mit_kell'},
+          {icon:'❓', text:'"Hogyan tudnék segíteni?"', next:'mit_kell'},
+          {icon:'⚠️', text:'"Valami átverés / Nem érdekel"', next:'__OBJ_BIZ'},
+        ]
+      },
+      mit_kell: {
+        step:3, label:'Részletezés',
+        you:'<span class="hl-t">Változat 1 (részletesebb):</span>\nGazdasági elemzéseket végzek, vásárlási szokások, pénzügyi szokások kapcsán – néhány dologgal kapcsolatban kikérdezném a véleményed, és az is lehet, hogy tudok néhány <span class="hl">hasznos infóval</span> szolgálni akár.\n\n<span class="hl-t">Változat 2 (egyszerűbben):</span>\nCsupán annyi, hogy végighallgatsz engem, és néhány szempont alapján adsz visszajelzést róla.',
+        reactions:[
+          {icon:'👍', text:'"Aha, értem – mikor?"', next:'idopont'},
+          {icon:'👍', text:'"Rendben!"', next:'idopont'},
+        ]
+      },
+      idopont: {
+        step:4, label:'Időpont',
+        you:'Vagy online videóhívásban, vagy akár össze is futhatunk – amelyik neked kényelmesebb...\n\n<span class="hl">Kedd vagy szerda 17:00</span> neked milyen lenne?',
+        reactions:[
+          {icon:'✅', text:'"Kedd / Szerda jó!"', next:'zaras'},
+          {icon:'🤷', text:'"Nem tudom még azt a napomat..."', next:'rugalmas'},
+          {icon:'📞', text:'"Inkább visszahívj valamikor."', next:'visszahivas'},
+        ]
+      },
+      rugalmas: {
+        step:4, label:'Rugalmas idő',
+        you:'Úgy hívnálak akkor, hogy nem tartalak fel a munkában – <span class="hl">mikor lennél elérhető?</span>',
+        reactions:[
+          {icon:'📅', text:'"X napon / X időpontban jó."', next:'zaras'},
+        ]
+      },
+      visszahivas: {
+        step:4, label:'Visszahívás',
+        you:'Persze! Mikor keresselek – délelőtt, vagy inkább munkaidő után?',
+        reactions:[
+          {icon:'📅', text:'"Délután X körül jó."', next:'zaras'},
+        ]
+      },
+      zaras: {
+        step:5, label:'Lezárva ✓', type:'success',
+        you:'Okés, beírtam magamnak – aznap délelőtt vagy előtte este írok egy <span class="hl-t">emlékeztetőt</span>. Ha bármi közbejönne, pontosítunk! 😊',
+        tip:'✔ Pontos időpont – naptárban rögzíteni!\n✔ ZOOM / Messenger magyarázat ha kell!\n✔ Szakmai vezető elkísérheti – személyiségtől függ!',
+        reactions:[]
+      }
+    }
+  },
+
+  // ── ATOM: SZÜLŐI / MÁS AJÁNLÁS ────────────
+  'atom-szuloi': {
+    title: 'Szülői / más ajánlás',
+    totalSteps: 5,
+    start: 'nyito',
+    nodes: {
+      nyito: {
+        step:1, label:'Nyitó',
+        you:'Szia <span class="var">[Név]</span>! Jókor hívlak, van 2 szabad perced?',
+        reactions:[
+          {icon:'😊', text:'"Igen, mondd csak – kivel beszélek?"', next:'intro_ref'},
+          {icon:'😊', text:'"Igen, persze!"', next:'intro_ref'},
+          {icon:'⏱️', text:'"Most nem érek rá."', next:'__OBJ_IDO'},
+        ]
+      },
+      intro_ref: {
+        step:2, label:'Ajánló bemutatkozás',
+        you:'<span class="var">[Szülőd / Ajánló neve]</span> fia / lánya vagyok – mondta, hogy nyugodtan rád csöröghetek egy aprósággal! 😊\n\nElkezdtem egy gazdasági cégnél <span class="hl">elemző gyakornokként</span> dolgozni, és meg szerettelek volna kérdezni, hogy a jövő héten rám tudnál-e szánni <span class="hl">1 órát</span>, ahol egy gyakornoki elemzést el tudnék készíteni veled?\n\nAz a feladatom, hogy különböző szakmák szerint jól begyakoroljam a folyamatokat – és ha jól tudom, Te <span class="var">[foglalkozás]</span>-ként dolgozol.',
+        reactions:[
+          {icon:'✅', text:'"Persze, mikor?"', next:'idopont'},
+          {icon:'❓', text:'"Mit kell csinálnom?"', next:'mit_kell'},
+          {icon:'⚠️', text:'"Valami átverés / Nem érdekel"', next:'__OBJ_BIZ'},
+        ]
+      },
+      mit_kell: {
+        step:3, label:'Részletezés',
+        you:'Csupán annyi, hogy végighallgatsz engem – néhány dologgal kapcsolatban kikérdezném a véleményed, és az is lehet, hogy tudok <span class="hl">hasznos infóval</span> szolgálni akár.',
+        reactions:[
+          {icon:'👍', text:'"Értem, mikor egyeztessünk?"', next:'idopont'},
+        ]
+      },
+      idopont: {
+        step:4, label:'Időpont',
+        you:'Vagy online videóhívásban, vagy akár össze is futhatunk...\n\n<span class="hl">Kedd vagy szerda 17:00</span> neked milyen lenne?',
+        reactions:[
+          {icon:'✅', text:'"Kedd / Szerda jó!"', next:'zaras'},
+          {icon:'🤷', text:'"Nem tudom még a napomat..."', next:'rugalmas'},
+        ]
+      },
+      rugalmas: {
+        step:4, label:'Rugalmas idő',
+        you:'Úgy hívnálak, hogy nem tartalak fel – <span class="hl">mikor lennél elérhető?</span>',
+        reactions:[
+          {icon:'📅', text:'"X napon jó."', next:'zaras'},
+        ]
+      },
+      zaras: {
+        step:5, label:'Lezárva ✓', type:'success',
+        you:'Okés, beírtam! Aznap délelőtt írok egy <span class="hl-t">emlékeztetőt</span>. Ha bármi közbejönne, pontosítunk! 😊',
+        tip:'✔ Pontos időpont – naptárban!\n✔ ZOOM / Messenger magyarázat ha kell!',
+        reactions:[]
+      }
+    }
+  },
+
+  // ── ATOM: 30 ALATT ────────────────────────
+  'atom-30alatt': {
+    title: '30 év alatti – másodállású',
+    totalSteps: 5,
+    start: 'nyito',
+    nodes: {
+      nyito: {
+        step:1, label:'Nyitó',
+        you:'Szia! Jókor hívlak, van szabad 2 perced?',
+        reactions:[
+          {icon:'😊', text:'"Persze, mondd csak!"', next:'pitch'},
+          {icon:'⏱️', text:'"Most nem érek rá."', next:'__OBJ_IDO'},
+        ]
+      },
+      pitch: {
+        step:2, label:'Pitch',
+        you:'Volna egy gyors kérdésem – elkezdtem egy gazdasági cégnél <span class="hl">elemzőként</span> dolgozni, és meg szerettelek volna kérdezni, hogy a jövő héten rám tudnál-e szánni <span class="hl">1 órát</span>, ahol egy <span class="hl">próba elemzést</span> el tudnék készíteni veled?\n\nLesz belőle egy komplex vizsgám, amire készülök – az a feladatom, hogy vegyesen minden korosztályból és különböző szakmák szerint jól begyakoroljam a folyamatokat.',
+        reactions:[
+          {icon:'✅', text:'"Persze, mikor?"', next:'idopont'},
+          {icon:'❓', text:'"Mit kell csinálnom?"', next:'mit_kell'},
+          {icon:'⚠️', text:'"Valami átverés?"', next:'__OBJ_BIZ'},
+        ]
+      },
+      mit_kell: {
+        step:3, label:'Részletezés',
+        you:'Csupán annyi, hogy végighallgatsz engem – néhány dologgal kapcsolatban kikérdezném a véleményed, és az is lehet, hogy tudok <span class="hl">hasznos infóval</span> szolgálni.',
+        reactions:[
+          {icon:'👍', text:'"Aha, mikor?"', next:'idopont'},
+        ]
+      },
+      idopont: {
+        step:4, label:'Időpont',
+        you:'Online videóhívásban, vagy össze is futhatunk...\n\n<span class="hl">Kedd vagy szerda 17:00</span> neked milyen lenne?',
+        reactions:[
+          {icon:'✅', text:'"Jó / Igen!"', next:'zaras'},
+          {icon:'🤷', text:'"Nem tudom a napomat..."', next:'rugalmas'},
+        ]
+      },
+      rugalmas: {
+        step:4, label:'Rugalmas idő',
+        you:'Mikor lennél elérhető? Úgy hívnálak, hogy nem tartalak fel a munkában.',
+        reactions:[
+          {icon:'📅', text:'"X időpontban jó."', next:'zaras'},
+        ]
+      },
+      zaras: {
+        step:5, label:'Lezárva ✓', type:'success',
+        you:'Okés, beírtam! Aznap délelőtt írok <span class="hl-t">emlékeztetőt</span>. Ha bármi közbejönne, pontosítunk!',
+        reactions:[]
+      }
+    }
+  },
+
+  // ── ATOM: 30 FELETT ───────────────────────
+  'atom-30felett': {
+    title: '30 év feletti – másodállású',
+    totalSteps: 5,
+    start: 'nyito',
+    nodes: {
+      nyito: {
+        step:1, label:'Nyitó',
+        you:'Szia! Jókor hívlak, van szabad 2 perced?',
+        reactions:[
+          {icon:'😊', text:'"Persze, mondd csak!"', next:'pitch'},
+          {icon:'⏱️', text:'"Most nem érek rá."', next:'__OBJ_IDO'},
+        ]
+      },
+      pitch: {
+        step:2, label:'Pitch',
+        you:'Volna egy gyors kérdésem – elkezdtem egy gazdasági cégnél <span class="hl">elemzőként</span> dolgozni, <span class="hl">adókedvezményekkel és támogatásokkal</span> foglalkozni, és lesz belőle majd egy szakmai vizsgám.\n\nEnnek kapcsán hívlak, hogy segítenél-e egy elemzés elkészítésében – annyi feladatod van, hogy végighallgatsz kb. <span class="hl">45 percben</span>, aztán adsz egy visszajelzést néhány szempont alapján.',
+        reactions:[
+          {icon:'✅', text:'"Persze, mikor?"', next:'idopont'},
+          {icon:'❓', text:'"Hogyan tudnék segíteni?"', next:'mit_kell'},
+          {icon:'⚠️', text:'"Valami átverés?"', next:'__OBJ_BIZ'},
+        ]
+      },
+      mit_kell: {
+        step:3, label:'Részletezés',
+        you:'Gazdasági elemzéseket végzek – néhány dologgal kapcsolatban kikérdezném a véleményed, és az is lehet, hogy tudok <span class="hl">hasznos infóval</span> szolgálni.\n\nCsupán annyi, hogy végighallgatsz és néhány szempont alapján adsz visszajelzést.',
+        reactions:[
+          {icon:'👍', text:'"Értem, mikor?"', next:'idopont'},
+        ]
+      },
+      idopont: {
+        step:4, label:'Időpont',
+        you:'Online vagy személyesen – amelyik kényelmesebb...\n\n<span class="hl">Kedd vagy szerda 17:00</span> neked milyen lenne?',
+        reactions:[
+          {icon:'✅', text:'"Jó / Igen!"', next:'zaras'},
+          {icon:'🤷', text:'"Nem tudom a napomat..."', next:'rugalmas'},
+        ]
+      },
+      rugalmas: {
+        step:4, label:'Rugalmas idő',
+        you:'Mikor lennél elérhető? Úgy hívnálak, hogy nem tartalak fel.',
+        reactions:[
+          {icon:'📅', text:'"X időpontban jó."', next:'zaras'},
+        ]
+      },
+      zaras: {
+        step:5, label:'Lezárva ✓', type:'success',
+        you:'Okés, beírtam! Aznap délelőtt írok <span class="hl-t">emlékeztetőt</span>. Ha bármi közbejönne, pontosítunk!',
+        tip:'✔ 45 perces keret!\n✔ Naptárban rögzíteni!',
+        reactions:[]
+      }
+    }
+  },
+
+  // ── HALADÓ: AJÁNLÁS KLASSZIKUS ───────────
+  'halado-ajanlas': {
+    title: 'Ajánlás – Klasszikus időpont',
+    totalSteps: 6,
+    start: 'nyito',
+    nodes: {
+      nyito: {
+        step:1, label:'Bemutatkozás',
+        you:'Üdvözlöm <span class="var">[Ügyfél neve]</span>! Én <span class="var">[Neved]</span> vagyok – jókor telefonálok? Tegeződhetünk akár?',
+        reactions:[
+          {icon:'😊', text:'"Igen, jókor – mondd csak!"', next:'szolt_e'},
+          {icon:'⏱️', text:'"Most nem ideális..."', next:'__OBJ_IDO'},
+          {icon:'🤔', text:'"Attól függ, miről van szó."', next:'szolt_e'},
+        ]
+      },
+      szolt_e: {
+        step:2, label:'Szólt az ajánló?',
+        you:'Én <span class="var">[Neved]</span> vagyok, szerintem személyesen még nem ismerjük egymást – viszont ha minden igaz, van egy közös ismerősünk / barátunk: <span class="var">[Ajánló neve]</span>.\n\nSzólt, hogy foglak keresni majd a napokban?',
+        reactions:[
+          {icon:'✅', text:'"Igen-igen, szólt!"', next:'ha_szolt'},
+          {icon:'❌', text:'"Nem, nem szólt / nem emlékszem."', next:'ha_nem_szolt'},
+        ]
+      },
+      ha_szolt: {
+        step:3, label:'Ha szólt',
+        you:'Szuper! Említette, hogy mivel kapcsolatban foglak hívni?',
+        reactions:[
+          {icon:'💬', text:'"Valami pénzügyi dologról..."', next:'pitch'},
+          {icon:'🤷', text:'"Nem igazán mondta."', next:'pitch'},
+        ]
+      },
+      ha_nem_szolt: {
+        step:3, label:'Ha nem szólt',
+        you:'Ohh, akkor megelőztem – szólok neki, hogy gyorsabb voltam! 😄\n\nAzzal kapcsolatban hívlak, mert <span class="var">[Ajánló neve]</span>-kal régebb óta tartom a kapcsolatot – a legutóbbi beszélgetésünkkor felmerült a neved, akkor kaptam meg tőle a számod.',
+        reactions:[
+          {icon:'💬', text:'"Aha, értem."', next:'pitch'},
+          {icon:'🤔', text:'"Ő miért adta meg a számomat?"', next:'pitch'},
+        ]
+      },
+      pitch: {
+        step:4, label:'Pitch',
+        you:'Alapvetően <span class="hl">adókedvezményekkel, állami támogatásokkal</span> és ezek mellett <span class="hl">32 pénzügyi területtel</span> foglalkozom – és ezekben a témakörökben tudtam nekik segíteni. Megbeszéltem velük, hogy megcsörgetlek téged is, hátha tudok nektek is hasznos infókkal szolgálni!\n\n<em style="color:var(--muted)">(szünet – megvárod a reakciót)</em>\n\nAmi fontos, a félreértés elkerülése végett: <span class="hl">nem bankban dolgozom, nem biztosítónál</span>, és eladni se szeretnék neked.\n\nEgyébként <span class="hl-t">online is meg tudjuk oldani</span> – nem kell utaznia senkinek!',
+        reactions:[
+          {icon:'😊', text:'"Érdekes! Mikor találkozhatnánk?"', next:'idopont'},
+          {icon:'🤔', text:'"Valami terméket akar eladni?"', next:'__OBJ_BIZ'},
+          {icon:'🙅', text:'"Nekem ez most nem aktuális."', next:'__OBJ_NEM'},
+          {icon:'📵', text:'"Nem akarok pénzügyekről beszélni."', next:'__OBJ_MAG'},
+        ]
+      },
+      idopont: {
+        step:5, label:'Időpont',
+        you:'Annyi kérdésem lenne – melyik nap lehet ideális számodra?\n\n<span class="hl">Kedd 17:00 vagy csütörtök délután</span> például neked / nektek milyen? Online verzióban gondolkodva.',
+        reactions:[
+          {icon:'✅', text:'"Kedd / Csütörtök jó!"', next:'platform'},
+          {icon:'🤷', text:'"Nem tudom még a napomat..."', next:'rugalmas'},
+          {icon:'📞', text:'"Inkább visszahívj."', next:'visszahivas'},
+        ]
+      },
+      rugalmas: {
+        step:5, label:'Rugalmas idő',
+        you:'Persze! Melyik nap lenne ideális – hétköznap délelőtt vagy inkább délután?',
+        reactions:[
+          {icon:'📅', text:'"X napon / X időpontban jó."', next:'platform'},
+        ]
+      },
+      visszahivas: {
+        step:5, label:'Visszahívás',
+        you:'Rendben – mikor keresselek, hogy ne tartsalak fel a munkában?',
+        reactions:[
+          {icon:'📅', text:'"Végzek X-kor, utána jó."', next:'platform'},
+        ]
+      },
+      platform: {
+        step:6, label:'Platform',
+        you:'<span class="var">[Időpont]</span>-től akkor beírom magunkat – előtte egy nappal küldök egy <span class="hl-t">megerősítő SMS-t</span> is.\n\nAnnyi kérdésem volna még: <span class="hl">ZOOM vagy Messenger</span> volna számodra ideális? Mert akkor vagy egy ZOOM meghívót küldök, vagy bejelöllek gyorsan Facebookon.',
+        reactions:[
+          {icon:'💻', text:'"ZOOM legyen."', next:'zaras'},
+          {icon:'📱', text:'"Messenger jó."', next:'zaras'},
+        ]
+      },
+      zaras: {
+        step:6, label:'Lezárva ✓', type:'success',
+        you:'Rendben, tökéletes! Beírtam magunkat – előtte nappal küldök egy <span class="hl-t">megerősítő SMS-t</span>. Szép napot! 😊',
+        tip:'✔ Pontos időpont – naptárban!\n✔ Megerősítő SMS másnap!\n✔ ZOOM meghívó VAGY FB bejelölés!',
+        reactions:[]
+      }
+    }
+  },
+
+  // ── HALADÓ: SZERVIZ ───────────────────────
+  'halado-szerviz': {
+    title: 'Szerviz egyeztetés',
+    totalSteps: 4,
+    start: 'nyito',
+    nodes: {
+      nyito: {
+        step:1, label:'Nyitó',
+        you:'Szia! Jókor hívlak, van szabad 2 perced?',
+        reactions:[
+          {icon:'😊', text:'"Persze, mondd csak!"', next:'tipus'},
+          {icon:'⏱️', text:'"Most nem érek rá."', next:'__OBJ_IDO'},
+        ]
+      },
+      tipus: {
+        step:2, label:'Típus kiválasztása', type:'branch',
+        you:'Azzal kapcsolatban hívlak, hogy...\n\n<em style="color:var(--muted)">(Válassz a hívás célja szerint:)</em>',
+        reactions:[
+          {icon:'📋', text:'Éves áttekintés (ABC – minden ügyfél)', next:'abc', class:'branch'},
+          {icon:'📢', text:'Kampány – célzott termék', next:'kampany', class:'branch'},
+          {icon:'🎯', text:'Keresztértékesítés (X-sell)', next:'xsell', class:'branch'},
+        ]
+      },
+      abc: {
+        step:3, label:'ABC – Éves áttekintés',
+        you:'...minden évben tartok legalább egyszer minden ügyfelemmel egy <span class="hl">gyors áttekintést</span> a meglévő folyamatokról – <span class="hl">20-30 percben</span> személyesen vagy online megejteném veletek is a jövő héten.\n\n<span class="hl">Kedd vagy szerda 18:00?</span>',
+        reactions:[
+          {icon:'✅', text:'"Igen, oké – mikor?"', next:'zaras'},
+          {icon:'🤷', text:'"Nem tudom a napomat..."', next:'rugalmas'},
+        ]
+      },
+      kampany: {
+        step:3, label:'Kampány pitch',
+        you:'...egész hónapban egy fontos témával foglalkozom:\n\n<span class="hl">• Folyószámla  • Nyugdíj  • Egészségpénztár\n• Kockázati biztosítások  • Lakásbiztosítás</span>\n\nEmiatt hívlak, hogy a kampány részleteit összefoglaljam neked <span class="hl">20-30 percben</span> – megnézzük, hogy tudsz belőle profitálni.\n\n<span class="hl">Hétfő vagy péntek a délutáni órákban?</span>',
+        reactions:[
+          {icon:'✅', text:'"Igen, mikor?"', next:'zaras'},
+          {icon:'🤷', text:'"Nem tudom a napomat..."', next:'rugalmas'},
+        ]
+      },
+      xsell: {
+        step:3, label:'X-sell pitch',
+        you:'...van egy egészen különleges ajánlat / javaslat, amit olyan ügyfeleimnek szoktam megemlíteni, akik ezt érdekesnek gondolhatják – mert <span class="var">[indok / kontextus]</span>.\n\nEgy rövid <span class="hl">20-30 perces online meetingen</span> felvázolnám a részleteket.',
+        tip:'⚠️ Ha egyedi X-sell ötleted van, mindig kérj ötletet a direkt vezetőtől script / módszer előtt!',
+        reactions:[
+          {icon:'✅', text:'"Érdekes, mikor?"', next:'zaras'},
+          {icon:'🤷', text:'"Nem tudom a napomat..."', next:'rugalmas'},
+        ]
+      },
+      rugalmas: {
+        step:3, label:'Rugalmas idő',
+        you:'Mikor lennél elérhető? Úgy hívnálak, hogy ne legyen probléma.',
+        reactions:[
+          {icon:'📅', text:'"X időpontban jó."', next:'zaras'},
+        ]
+      },
+      zaras: {
+        step:4, label:'Lezárva ✓', type:'success',
+        you:'Szuper – beírtam! Küldök előzetesen anyagot, Te is gyűjts össze az érintett témában minden doksit / kérdést, hogy könnyen haladjunk 😊',
+        tip:'✔ Pontos időpont – naptárban és online rendszerben!\n✔ Közös naptárból dolgozz a szakmai vezetővel!',
+        reactions:[]
+      }
+    }
+  },
+
+  // ── HALADÓ: TANÁCSADÁS ───────────────────
+  'halado-tanacsadas': {
+    title: 'Tanácsadás egyeztetés',
+    totalSteps: 4,
+    start: 'nyito',
+    nodes: {
+      nyito: {
+        step:1, label:'Nyitó',
+        you:'Szia! Jókor hívlak, van szabad 2 perced?',
+        reactions:[
+          {icon:'😊', text:'"Persze, mondd csak!"', next:'celpont'},
+          {icon:'⏱️', text:'"Most nem érek rá."', next:'__OBJ_IDO'},
+        ]
+      },
+      celpont: {
+        step:2, label:'Visszahívás célja',
+        you:'Azzal kapcsolatban hívlak, hogy ígértem mára egy gyors visszahívást – a tanácsadási időpontot szeretném pontosítani.\n\n– Közelben van a naptárad?\n– Sikerült egyeztetni a pároddal?\n\n<span class="hl">Kedd vagy csütörtök délután</span> volna ideális inkább?',
+        reactions:[
+          {icon:'✅', text:'"Kedd jó!"', next:'kedd_jo'},
+          {icon:'✅', text:'"Csütörtök jobb."', next:'kedd_jo'},
+          {icon:'🤷', text:'"Nem tudom még azt a napomat..."', next:'ceruzas'},
+          {icon:'📞', text:'"Vissza tudsz hívni valamikor?"', next:'visszahivas'},
+        ]
+      },
+      kedd_jo: {
+        step:3, label:'Online / személyes',
+        you:'Online, vagy akár össze is futhatunk – amelyik neked kényelmesebb...\n\n<span class="hl">Kedd 17:00</span> neked milyen lenne?',
+        reactions:[
+          {icon:'💻', text:'"Online, kedd jó!"', next:'zaras'},
+          {icon:'🤝', text:'"Ha átugrasz hozzánk, az is jó."', next:'zaras'},
+        ]
+      },
+      ceruzas: {
+        step:3, label:'Ceruzás időpont',
+        you:'Csináljuk azt, hogy megbeszélünk egy <span class="hl">ceruzás időpontot</span> – legkésőbb 2 nappal előtte csörgünk egymásnak, hogy tartsuk vagy módosítsunk rajta. Jó?\n\nOkés, beírok akkor egy <span class="hl">kedd 17:30-at</span> – arra kérlek, hogy ha mégsem volna jó, próbálj hamarabb szólni.',
+        reactions:[
+          {icon:'✅', text:'"Rendben, oké."', next:'zaras'},
+          {icon:'📅', text:'"Inkább legyen X időpont."', next:'zaras'},
+        ]
+      },
+      visszahivas: {
+        step:3, label:'Visszahívás',
+        you:'Persze! Mikor keresselek – úgy hívnálak, hogy nem tartalak fel a munkában.',
+        reactions:[
+          {icon:'📅', text:'"Végzek X-kor, utána jó."', next:'zaras'},
+        ]
+      },
+      zaras: {
+        step:4, label:'Lezárva ✓', type:'success',
+        you:'Beírtam – aznap délelőtt vagy előtte este írok egy <span class="hl-t">emlékeztetőt</span>. Ha bármi közbejönne, pontosítunk! 😊\n\nKüldtem neked már minden előzetes anyagot – sikerült megnézni? Ha még nem, vess rá egy pillantást: 5-10 perc, de sokat segít!',
+        tip:'✔ Pontos időpont – naptárban!\n✔ Ha visszahívást ígérsz, pontosan hívd vissza!',
+        reactions:[]
+      }
+    }
+  },
+
+  // ── HALADÓ: AJÁNLÁSKÉRÉS ─────────────────
+  'halado-ajker': {
+    title: 'Ajánláskérés egyeztetés',
+    totalSteps: 4,
+    start: 'nyito',
+    nodes: {
+      nyito: {
+        step:1, label:'Nyitó',
+        you:'Szia <span class="var">[Név]</span>! Jókor hívlak, van 2 szabad perced?',
+        reactions:[
+          {icon:'😊', text:'"Igen, mondd!"', next:'tipus'},
+          {icon:'⏱️', text:'"Most nem érek rá."', next:'__OBJ_IDO'},
+        ]
+      },
+      tipus: {
+        step:2, label:'Típus kiválasztása', type:'branch',
+        you:'Melyik eset áll fenn?',
+        reactions:[
+          {icon:'🔗', text:'Saját ügyféltől kérek ajánlást', next:'sajat', class:'branch'},
+          {icon:'👥', text:'Munkatárs ajánláskérő (próbaidő lezárult)', next:'munkatars', class:'branch'},
+        ]
+      },
+      sajat: {
+        step:3, label:'Saját ügyféltől',
+        you:'XY vagyok – azért hívlak, mert van egy apróság ami miatt szerettem volna egyeztetni veled kb. <span class="hl">15 percben</span> egy online meetingen, <span class="hl">ajánlásokkal kapcsolatban</span>.\n\nFelvázolnám röviden hogyan dolgozunk – az eddigi időpontjainkon nem volt rá időnk, és szeretném pótolni 😊\n\nMi ugye az ügyfeleinktől nem kérünk pénzt egyszer sem, hanem <span class="hl">ajánlásokkal dolgozunk kizárólag</span> – ezt a témát nem érintettem nálad az idő szűke miatt.\n\n<span class="hl">Kedden 17:00?</span>',
+        reactions:[
+          {icon:'✅', text:'"Persze oké, mikor?"', next:'zaras'},
+          {icon:'❓', text:'"Miről van szó pontosan?"', next:'sajat_detail'},
+        ]
+      },
+      sajat_detail: {
+        step:3, label:'Részletezés',
+        you:'Mi ajánlásokkal dolgozunk kizárólag – az ügyfeleinktől nem kérünk pénzt soha a közös munka során. Ezt a kultúrát szeretném 15 percben felvázolni neked.',
+        reactions:[
+          {icon:'✅', text:'"Rendben, oké!"', next:'zaras'},
+        ]
+      },
+      munkatars: {
+        step:3, label:'Munkatárs ajánláskérő',
+        you:'XY vagyok – azért hívlak, mert <span class="var">[Munkatárs neve]</span>nak sikerrel zárult a próbaideje, <span class="hl">teljeskörű munkatársunkká vált</span>! 🎉\n\nEzzel kapcsolatban szerettem volna egy rövid <span class="hl">15 perces meetinget</span> egyeztetni veled online – ahol az <span class="hl">ajánlások kultúráját / metódusát</span> beszélnénk át, ebben segítem most <span class="var">[Munkatárs neve]</span>t 😊\n\n<span class="hl">Kedden 17:00?</span>',
+        reactions:[
+          {icon:'✅', text:'"Persze oké!"', next:'zaras'},
+          {icon:'❓', text:'"Miről van szó pontosan?"', next:'munkatars_detail'},
+        ]
+      },
+      munkatars_detail: {
+        step:3, label:'Részletezés',
+        you:'Mi ajánlásokkal dolgozunk kizárólag – az ügyfelektől nem kérünk pénzt soha. Ezt a kultúrát szeretnénk <span class="var">[Munkatárs neve]</span>val együtt felvázolni neked 15 percben.',
+        reactions:[
+          {icon:'✅', text:'"Rendben, oké!"', next:'zaras'},
+        ]
+      },
+      zaras: {
+        step:4, label:'Lezárva ✓', type:'success',
+        you:'Beírtam – ha bármi változna, szólj! Szép napot! 😊',
+        reactions:[]
+      }
+    }
+  },
+
+  // ── HALADÓ: IDŐPONTBIZTOSÍTÁS ─────────────
+  'halado-idobizt': {
+    title: 'Időpontbiztosítás',
+    totalSteps: 3,
+    start: 'helyszin',
+    nodes: {
+      helyszin: {
+        step:1, label:'Helyszín / mód', type:'branch',
+        you:'Melyik eset?',
+        reactions:[
+          {icon:'💻', text:'Online – 3 nappal előtte', next:'online_3', class:'branch'},
+          {icon:'💻', text:'Online – előző nap', next:'online_elotte', class:'branch'},
+          {icon:'🏠', text:'Személyes – ügyfél otthona', next:'szemelyes_otthon', class:'branch'},
+          {icon:'☕', text:'Személyes – kávézó', next:'szemelyes_kavezо', class:'branch'},
+        ]
+      },
+      online_3: {
+        step:2, label:'Link küldés visszaigazolása',
+        you:'Üdvözlöm <span class="var">[Ügyfél neve]</span>! <span class="var">[Neved]</span> vagyok – azért keresem, mert szeretném megkérdezni, hogy <span class="hl">megkapta-e a linket</span>, amit e-mailben küldtem?',
+        reactions:[
+          {icon:'✅', text:'"Igen, megkaptam."', next:'zaras'},
+          {icon:'❌', text:'"Nem, nem kaptam."', next:'link_ujra'},
+        ]
+      },
+      link_ujra: {
+        step:2, label:'Link újraküldés',
+        you:'Nem probléma – most azonnal újraküldöm. Ellenőrizze a spam mappát is kérem. Ha bármi probléma van a belépéssel, hívjon nyugodtan!',
+        reactions:[
+          {icon:'✅', text:'"Oké, köszönöm!"', next:'zaras'},
+        ]
+      },
+      online_elotte: {
+        step:2, label:'Előző napi megerősítő',
+        you:'Üdvözlöm <span class="var">[Ügyfél neve]</span>! <span class="var">[Neved]</span> vagyok – azért keresem, mert szerettem volna jelezni, hogy holnap már pár perccel korábban <span class="hl">bejelentkezem az online hívásba</span>. Ha nem tud belépni, hívjon nyugodtan és segítek!',
+        reactions:[
+          {icon:'✅', text:'"Rendben, köszönöm!"', next:'zaras'},
+          {icon:'❌', text:'"Sajnos nem tudom tartani az időpontot."', next:'lemondas'},
+        ]
+      },
+      szemelyes_otthon: {
+        step:2, label:'Személyes – otthon',
+        you:'Üdvözlöm <span class="var">[Ügyfél neve]</span>! <span class="var">[Neved]</span> vagyok – azért keresem, mert szeretném megkérdezni: holnap, amikor odaérek Önökhöz, <span class="hl">csengessek, vagy inkább hívjam fel?</span>',
+        reactions:[
+          {icon:'🔔', text:'"Csengessen!"', next:'zaras'},
+          {icon:'📞', text:'"Inkább hívjon fel."', next:'zaras'},
+          {icon:'❌', text:'"Sajnos nem tudom tartani."', next:'lemondas'},
+        ]
+      },
+      'szemelyes_kavezо': {
+        step:2, label:'Személyes – kávézó',
+        you:'Üdvözlöm <span class="var">[Ügyfél neve]</span>! <span class="var">[Neved]</span> vagyok – azért keresem, mert szerettem volna jelezni, hogy holnap <span class="hl">pár perccel korábban ott leszek a kávézóban</span>. Hívjon fel, amikor odaér – így könnyen megismerjük egymást!',
+        reactions:[
+          {icon:'✅', text:'"Rendben, köszönöm!"', next:'zaras'},
+          {icon:'❌', text:'"Sajnos nem tudom tartani."', next:'lemondas'},
+        ]
+      },
+      lemondas: {
+        step:2, label:'Lemondás kezelése',
+        you:'Nem probléma, megértem! Találjunk egy másik időpontot – <span class="hl">melyik nap lenne jó a közeljövőben?</span>\n\nEz már mindenképp legyen fix! 😊',
+        reactions:[
+          {icon:'📅', text:'"X napon / X időpontban jó."', next:'zaras'},
+        ]
+      },
+      zaras: {
+        step:3, label:'Visszaigazolva ✓', type:'success',
+        you:'Tökéletes, köszönöm! Várjuk akkor 😊',
+        tip:'✔ Ha lemondtak: azonnal keress új időpontot!\n✔ Az új időpont legyen FIX!',
+        reactions:[]
+      }
+    }
+  }
+
+};
+
+// ══════════════════════════════════════════════
+// OBJECTION DATA
+// ══════════════════════════════════════════════
+const OBJECTIONS = [
+  {id:'__OBJ_IDO', icon:'⏱️', label:'Időhiány / Elfoglaltság', items:[
+    {trigger:'"Vezetek, bocsi, mindjárt visszahívlak!"',
+     resp:'Rendben, semmi gond – csak fél percre tartanálak fel! 30 másodperc múlva letesszük. Mikor hívhatlak vissza?'},
+    {trigger:'"Vissza tudnál hívni egy óra múlva?"',
+     resp:'Természetesen! Viszont egy percet rabolok az idődből maximum, és letesszük 😊'},
+    {trigger:'"Annyira be vagyok táblázva..."',
+     resp:'Végre valaki ugyanabban a cipőben van, mint én! Ezért is csak 2 percre csörögtem most.'},
+  ]},
+  {id:'__OBJ_BIZ', icon:'⚠️', label:'Bizalmatlanság / Átverés', items:[
+    {trigger:'"Valami átverés, vagy csak nyomják a terméket!"',
+     resp:'Kérlek, ne keverj össze az ügynökökkel és call centeresekkel – nem emiatt kaptam az ajánlást. Független elemzéssel foglalkozom.'},
+    {trigger:'"Nem tudom, mennyire vagy független..."',
+     resp:'Amennyire csak lehet, annyira vagyok független! Fogalmam sincs milyen biztosításaid vannak – nem is ezért hívtalak!'},
+    {trigger:'"A végén mindig fizetnem kell valamiért!"',
+     resp:'Kérlek, ne keverj össze az ügynökökkel – nem emiatt kaptam az ajánlást, hogy valamilyen terméket javasoljak. Független elemzéssel foglalkozom.'},
+  ]},
+  {id:'__OBJ_NEM', icon:'🙅', label:'Nem aktuális / Majd keres ő', items:[
+    {trigger:'"Nekem ez most nem aktuális, majd én kereslek."',
+     resp:'Lehet, hogy félreértettük egymást – én alapvetően nem értékesítéssel foglalkozom, hanem egy kötetlen elemzést készítenénk el. Nem tudtuk előre, hogy melyek lesznek a témák.'},
+    {trigger:'"Már annyi ilyen hívást kaptam..."',
+     resp:'Kérlek, ne keverj össze az ügynökökkel és call centeresekkel – de telefonon egyszerűbben fel tudtuk venni a kapcsolatot ajánlásból 😊'},
+  ]},
+  {id:'__OBJ_MAG', icon:'🔒', label:'Magánélet / Anyagi helyzet', items:[
+    {trigger:'"Nem szeretek ilyenekről beszélni, kényelmetlen."',
+     resp:'100%-ban egyetértek! Sőt, az a hivatásom, hogy az olyan emberek ne tudjanak érvényesülni, akik kártékonyak az emberek pénzügyeire.'},
+    {trigger:'"Nem szoktam ismeretlenekkel telefonon pénzügyekről."',
+     resp:'Ezért nem is szeretnék telefonban részletezni – az ajánlóval sem telefonban beszéltem, pedig őt már régóta ismerem.'},
+  ]},
+  {id:'__OBJ_TAP', icon:'📉', label:'Rossz korábbi tapasztalat', items:[
+    {trigger:'"Semmi újat nem mondtak, időpocsékolásnak éreztem."',
+     resp:'Köszönöm, hogy megosztottad – de ez nekem egy picit rosszul esik, mert az ajánlód pont az ellenkezőjét mondta!'},
+    {trigger:'"Mindig megígértek valamit, aztán én jövök ki rosszul!"',
+     resp:'Meg engedsz egy illetlen kérdést? Ugye nem az első szembejövő emberrel házasodtál össze? A legjobb lehetőség sem jön mindig elsőre. Én a saját munkámért vállalok felelősséget.'},
+  ]},
+  {id:'__OBJ_HIT', icon:'🏦', label:'Hitelesség megkérdőjelezése', items:[
+    {trigger:'"Neked ebből mi a hasznod?"',
+     resp:'A helyzet: az ajánlód azt javasolta, hogy egy ugyanolyan elemzés erejéig vegyük fel a kapcsolatot. MNB szabály alapján egy fizetési keretrendszerben vannak a független tanácsadók – leginkább a pályázatírók munkájára hasonlít.'},
+    {trigger:'"Aki pénzügyi tanácsot ad, annak 3 lakása legyen!"',
+     resp:'Nincs – de álljunk meg! Pénzügyi szolgáltatási tanácsadó vagyok, de ne keverj össze a Wall Street farkasaival! 😄'},
+  ]},
+  {id:'__OBJ_MAK', icon:'😤', label:'Makacs / Öntelt hozzáállás', items:[
+    {trigger:'"Tudom, hogy ez csak eladási szöveg..."',
+     resp:'Mire gondolsz pontosan? Fontos: nem egy eladó vagyok, hanem független pénzügyi elemző.'},
+    {trigger:'"Rám szeretnél sózni valamit?"',
+     resp:'Határozottan nem! Engedd meg, hogy szakmailag és emberileg is egy jó referenciával kapcsolatban hívtalak.'},
+    {trigger:'"Miért kellene pont rád hallgatnom?"',
+     resp:'Kérlek, engedd meg, hogy ezt bebizonyítsam – rendelkezem minden fontos szakmai referenciával 😊'},
+  ]},
+  {id:'__OBJ_DOM', icon:'👑', label:'Kontroll igény / Dominancia', items:[
+    {trigger:'"Velem nem annyira egyszerű időpontot egyeztetni..."',
+     resp:'Végre valaki ugyanabban a cipőben van, mint én! 😄'},
+    {trigger:'"Általában én szoktam vezetni a beszélgetést..."',
+     resp:'Nyitott vagyok mindenféle kompromisszumra 😊'},
+  ]},
+];
+
+const OBJ_MAP = {};
+OBJECTIONS.forEach(o => OBJ_MAP[o.id] = o);
+
+// ══════════════════════════════════════════════
+// CALL TYPE CONFIG
+// ══════════════════════════════════════════════
+const CALL_TYPES = {
+  atom: [
+    {id:'atom-uni',      icon:'🎓', name:'Egyetemista', sub:'Saját ismerős · nincs ajánló'},
+    {id:'atom-szuloi',   icon:'👨‍👩‍👧', name:'Szülői / más ajánlás', sub:'Valaki ajánlott téged'},
+    {id:'atom-30alatt',  icon:'💼', name:'30 év alatti', sub:'Másodállású, fiatal ismerős'},
+    {id:'atom-30felett', icon:'🏠', name:'30 év feletti', sub:'Másodállású, komolyabb ügyfél'},
+  ],
+  halado: [
+    {id:'halado-ajanlas',    icon:'🤝', name:'Ajánlás – Klasszikus', sub:'Időpont egyeztetés ajánlásból'},
+    {id:'halado-szerviz',    icon:'🔄', name:'Szerviz egyeztetés', sub:'ABC / Kampány / Keresztértékesítés'},
+    {id:'halado-tanacsadas', icon:'📅', name:'Tanácsadás egyeztetés', sub:'Ha nem az elemzésen egyeztettük'},
+    {id:'halado-ajker',      icon:'📣', name:'Ajánláskérés', sub:'Saját ügyféltől / Munkatárson át'},
+    {id:'halado-idobizt',    icon:'🔔', name:'Időpontbiztosítás', sub:'Emlékeztető hívás sablonok'},
+  ]
+};
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let currentMode = null;
+let currentTypeId = null;
+let currentStory = null;
+let currentNodeId = null;
+let nodeHistory = [];
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function goHome() {
+  showScreen('home');
+  document.getElementById('obj-fab').style.display = 'none';
+}
+
+function selectMode(mode) {
+  currentMode = mode;
+  showScreen('calltype');
+  renderCallTypes();
+}
+
+function goBack() {
+  if (nodeHistory.length > 1) {
+    nodeHistory.pop();
+    currentNodeId = nodeHistory[nodeHistory.length - 1];
+    renderNode();
+  } else {
+    showScreen('calltype');
+    document.getElementById('obj-fab').style.display = 'none';
+  }
+}
+
+function selectCallType(id) {
+  currentTypeId = id;
+  currentStory = STORIES[id];
+  currentNodeId = currentStory.start;
+  nodeHistory = [currentNodeId];
+  showScreen('activecall');
+  document.getElementById('ac-title').textContent = currentStory.title;
+  document.getElementById('obj-fab').style.display = 'flex';
+  renderNode();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function navigateTo(nodeId) {
+  if (nodeId.startsWith('__OBJ_')) {
+    openObjDirect(nodeId);
+    return;
+  }
+  currentNodeId = nodeId;
+  nodeHistory.push(nodeId);
+  renderNode();
+  document.getElementById('ac-body').scrollTop = 0;
+}
+
+// ══════════════════════════════════════════════
+// RENDER CALL TYPES
+// ══════════════════════════════════════════════
+function renderCallTypes() {
+  const types = CALL_TYPES[currentMode];
+  document.getElementById('ct-title').textContent = currentMode === 'atom' ? '🌱 ATOM KEZDŐ' : '🎯 HALADÓ';
+  document.getElementById('ct-sub').textContent = currentMode === 'atom' ? 'Ismerősi körből egyeztetsz' : 'Ajánlásból dolgozol';
+  const list = document.getElementById('ct-list');
+  list.innerHTML = `<div class="slabel">Válassz call típust</div>`;
+  types.forEach(t => {
+    list.innerHTML += `<div class="type-card" onclick="selectCallType('${t.id}')">
+      <div class="tc-icon">${t.icon}</div>
+      <div><div class="tc-name">${t.name}</div><div class="tc-sub">${t.sub}</div></div>
+      <div class="tc-arr">›</div>
+    </div>`;
+  });
+}
+
+// ══════════════════════════════════════════════
+// RENDER NODE (the story step)
+// ══════════════════════════════════════════════
+function renderNode() {
+  const node = currentStory.nodes[currentNodeId];
+  if (!node) return;
+
+  // Progress dots
+  const total = currentStory.totalSteps;
+  const cur = node.step;
+  const dots = document.getElementById('prog-dots');
+  dots.innerHTML = '';
+  for (let i = 1; i <= total; i++) {
+    const d = document.createElement('div');
+    d.className = 'prog-dot' + (i < cur ? ' done' : i === cur ? ' active' : '');
+    dots.appendChild(d);
+  }
+  document.getElementById('prog-label').textContent = `${node.label} · ${cur}/${total}`;
+
+  const body = document.getElementById('ac-body');
+  body.innerHTML = '';
+
+  // YOU CARD
+  const card = document.createElement('div');
+  card.className = 'you-card' + (node.type === 'success' ? ' success' : '');
+
+  let cardHtml = '';
+  if (node.type === 'success') {
+    cardHtml += `<div class="success-badge">✅ Időpont megkötve!</div>`;
+  }
+  if (node.type === 'branch') {
+    cardHtml += `<div class="branch-label">Te döntöd el – válassz irányt</div>`;
+  } else {
+    cardHtml += `<div class="you-label">Te mondod</div>`;
+  }
+  cardHtml += `<div class="you-text">${node.you}</div>`;
+  if (node.tip) {
+    cardHtml += `<div class="tip-box">${node.tip}</div>`;
+  }
+  if (node.type === 'success') {
+    cardHtml += `<button class="btn-restart" onclick="restartFlow()">🔄 Új hívás indítása</button>`;
+  }
+  card.innerHTML = cardHtml;
+  body.appendChild(card);
+
+  // REACTIONS
+  if (node.reactions && node.reactions.length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'reactions-section';
+
+    if (node.type === 'branch') {
+      sec.innerHTML = `<div class="branch-label" style="margin-bottom:10px">🔀 Válassz forgatókönyvet</div>`;
+    } else {
+      sec.innerHTML = `<div class="reactions-label">Az ügyfél reagál...</div>`;
+    }
+
+    const list = document.createElement('div');
+    list.className = 'reactions-list';
+
+    node.reactions.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'react-btn' + (r.class === 'branch' ? ' branch' : '');
+      btn.innerHTML = `
+        <span class="rb-icon">${r.icon || '💬'}</span>
+        <span class="rb-quote">${r.text}</span>
+        <span class="rb-arr">›</span>
+      `;
+      btn.onclick = () => navigateTo(r.next);
+      list.appendChild(btn);
+    });
+
+    sec.appendChild(list);
+    body.appendChild(sec);
+  }
+
+  // Bottom padding
+  const pad = document.createElement('div');
+  pad.style.height = '90px';
+  body.appendChild(pad);
+}
+
+function restartFlow() {
+  currentNodeId = currentStory.start;
+  nodeHistory = [currentNodeId];
+  renderNode();
+  document.getElementById('ac-body').scrollTop = 0;
+}
+
+// ══════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function closeModalOut(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+function openObjMenu() {
+  document.getElementById('modal-title').textContent = '⚡ Kifogáskezelés';
+  let html = '<div class="obj-list">';
+  OBJECTIONS.forEach((o,i) => {
+    html += `<button class="obj-row" onclick="showObjDetail(${i})">
+      <span class="ri">${o.icon}</span>
+      <span class="rl">${o.label}</span>
+      <span class="ra">›</span>
+    </button>`;
+  });
+  html += '</div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modal-box').scrollTop = 0;
+}
+
+function openObjDirect(objId) {
+  const obj = OBJ_MAP[objId];
+  if (!obj) { openObjMenu(); return; }
+  document.getElementById('modal-title').textContent = '⚡ Kifogáskezelés';
+  document.getElementById('modal-body').innerHTML = '';
+  document.getElementById('modal').classList.add('open');
+  const idx = OBJECTIONS.findIndex(o => o.id === objId);
+  if (idx >= 0) showObjDetail(idx);
+}
+
+function showObjDetail(idx) {
+  const obj = OBJECTIONS[idx];
+  document.getElementById('modal-title').textContent = `${obj.icon} ${obj.label}`;
+  let html = `<button class="back-btn" onclick="openObjMenu()">← Összes kifogás</button>`;
+  obj.items.forEach((item, i) => {
+    html += `
+      <div style="margin-top:${i>0?'18px':'0'}">
+        <span class="otag muted">Ügyfél mondja:</span>
+        <div class="trig">${item.trigger}</div>
+        <span class="otag pink">Te válaszolod:</span>
+        <div class="script-block">${item.resp}</div>
+      </div>`;
+  });
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-box').scrollTop = 0;
+}
+</script>
+</body>
+</html>
