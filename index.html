@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d2244">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OVB Hívás">
 <title>Call Assistant · OVB</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -271,6 +275,267 @@ html,body{
 .otag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin:10px 0 5px;display:block}
 .otag:first-child{margin-top:0}
 .otag.pink{color:var(--pink)}.otag.muted{color:var(--muted)}
+
+/* ── KONFETTI ── */
+@keyframes cffall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(740deg);opacity:0}}
+#confetti-container{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}
+.cfp{position:fixed;top:-20px;pointer-events:none;animation:cffall linear forwards}
+
+/* ── SOLO COUNTER (aktivecall header) ── */
+#solo-counter{
+  font-size:12px;font-weight:700;letter-spacing:.04em;
+  color:var(--pink2);background:rgba(224,69,120,.12);
+  border:1px solid rgba(224,69,120,.25);border-radius:20px;
+  padding:3px 10px;cursor:pointer;display:none;white-space:nowrap;
+}
+
+/* ── SCORE BUTTON (success node) ── */
+.score-btn{
+  width:100%;margin-bottom:10px;
+  background:rgba(91,191,194,.12);border:1.5px solid var(--teal);
+  border-radius:12px;padding:14px;
+  font-size:15px;font-weight:700;color:var(--teal);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .15s;
+}
+.score-btn:active{background:rgba(91,191,194,.25)}
+.score-btn.logged{background:rgba(91,191,194,.2);opacity:.5;pointer-events:none}
+
+/* ── GOAL SETUP OVERLAY ── */
+#goal-overlay{
+  position:fixed;inset:0;z-index:998;background:rgba(9,16,36,.88);
+  display:flex;align-items:center;justify-content:center;padding:24px;
+}
+#goal-overlay.hidden{display:none}
+.goal-card{
+  width:100%;max-width:360px;background:var(--navy2);
+  border:1.5px solid rgba(224,69,120,.4);border-radius:20px;padding:24px;
+}
+.goal-card h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.goal-card p{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.goal-options{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.goal-opt{
+  background:rgba(255,255,255,.06);border:1.5px solid var(--border);
+  border-radius:10px;padding:12px 6px;font-size:16px;font-weight:700;
+  color:var(--white);cursor:pointer;text-align:center;
+}
+.goal-opt:active,.goal-opt.active{background:rgba(224,69,120,.2);border-color:var(--pink);color:var(--pink2)}
+.goal-confirm{
+  width:100%;background:var(--pink);border:none;border-radius:10px;
+  padding:12px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;
+}
+
+/* ── SESSION CATEGORY CARDS ── */
+.cat-session-card{
+  background:var(--navy2);border:1.5px solid var(--border);
+  border-radius:14px;padding:14px;transition:border-color .3s;
+}
+.cat-session-card.done{border-color:rgba(91,191,194,.55)}
+.comp-cat-btn{
+  width:100%;background:var(--pink);border:none;border-radius:10px;
+  padding:13px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;
+}
+.comp-cat-btn:active{filter:brightness(1.25);transform:scale(.98)}
+
+/* ── VERSENY SCREEN ── */
+.comp-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:rgba(0,0,0,.25);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.comp-timer-display{
+  font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;
+  letter-spacing:.04em;color:var(--white);
+}
+.comp-timer-display.urgent{color:var(--pink);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.comp-end-btn{
+  background:rgba(255,255,255,.08);border:1px solid var(--border);
+  border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;
+}
+.comp-players-grid{
+  flex:1;display:grid;gap:1px;background:rgba(255,255,255,.05);overflow:hidden;
+}
+.comp-player-col{
+  background:var(--navy2);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;padding:16px 12px;
+  position:relative;transition:background .3s;
+}
+.comp-player-col.leader{background:rgba(224,69,120,.07)}
+.comp-player-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.comp-player-score{font-size:68px;font-weight:900;line-height:1;transition:transform .15s}
+.comp-player-score.pop{animation:scorepop .25s ease}
+@keyframes scorepop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+.comp-player-crown{font-size:18px;position:absolute;top:10px;right:12px;opacity:0;transition:opacity .4s}
+.comp-player-col.leader .comp-player-crown{opacity:1}
+.comp-add-btn{
+  width:100%;max-width:150px;
+  background:var(--pink);border:none;border-radius:12px;
+  padding:13px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;
+}
+.comp-add-btn:active{filter:brightness(1.25);transform:scale(.96)}
+.comp-footer{
+  padding:10px 14px;display:flex;gap:8px;background:rgba(0,0,0,.2);
+  border-top:1px solid var(--border);flex-shrink:0;
+}
+.comp-foot-btn{
+  flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:8px;padding:9px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;
+}
+/* Setup */
+.comp-setup-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.comp-slabel{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.comp-player-input{
+  width:100%;background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,255,255,.12);border-radius:10px;
+  padding:11px 13px;font-size:15px;color:var(--white);outline:none;margin-bottom:7px;
+}
+.comp-player-input:focus{border-color:var(--pink)}
+.comp-time-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.comp-time-opt{
+  background:rgba(255,255,255,.06);border:1.5px solid var(--border);
+  border-radius:10px;padding:10px 4px;font-size:13px;font-weight:700;
+  color:var(--white);cursor:pointer;text-align:center;
+}
+.comp-time-opt.active{background:rgba(224,69,120,.2);border-color:var(--pink);color:var(--pink2)}
+.comp-start-btn{
+  width:100%;background:var(--pink);border:none;border-radius:12px;
+  padding:15px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;
+}
+/* Results */
+.comp-result-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.result-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--navy2);border-radius:12px;padding:14px 16px;
+  border:1px solid var(--border);
+}
+.result-row.first{border-color:rgba(247,193,72,.5);background:rgba(247,193,72,.07)}
+.result-rank{font-size:22px;width:32px;flex-shrink:0;text-align:center}
+.result-name{font-size:15px;font-weight:700;flex:1}
+.result-score{font-size:22px;font-weight:900;color:var(--pink2)}
+.cat-breakdown{
+  background:var(--navy2);border-radius:12px;padding:14px 16px;
+  border:1px solid var(--border);
+}
+.cat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.cat-row:last-child{border-bottom:none}
+.cat-label{font-size:13px;color:var(--muted)}
+.cat-val{font-size:15px;font-weight:700}
+
+/* ── AJÁNLÓ BAR ── */
+.ref-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 14px;flex-shrink:0;
+  background:rgba(139,107,174,.08);
+  border-bottom:1px solid rgba(139,107,174,.2);
+  cursor:pointer;transition:background .15s;
+  overflow:hidden;
+}
+.ref-bar:active{background:rgba(139,107,174,.18)}
+.ref-bar-icon{font-size:13px;flex-shrink:0}
+.ref-bar-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+.ref-bar-name{font-size:12px;color:var(--purple);font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ref-bar-name.set{color:#b89fd4}
+.ref-bar-btn{font-size:11px;color:var(--purple);flex-shrink:0;opacity:.7}
+
+/* ── AJÁNLÓ SWAP OVERLAY ── */
+#ref-overlay{
+  position:fixed;inset:0;z-index:998;
+  background:rgba(9,16,36,.88);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+#ref-overlay.hidden{display:none}
+.ref-sheet{
+  width:100%;max-width:500px;
+  background:var(--navy2);
+  border:1.5px solid rgba(139,107,174,.45);
+  border-bottom:none;
+  border-radius:20px 20px 0 0;
+  padding:20px 20px 28px;
+}
+.ref-sheet h3{font-size:15px;font-weight:700;margin-bottom:4px}
+.ref-sheet p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.ref-input{
+  width:100%;background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,255,255,.15);border-radius:10px;
+  padding:12px 14px;font-size:16px;color:var(--white);
+  outline:none;margin-bottom:12px;
+}
+.ref-input:focus{border-color:var(--purple)}
+.ref-btns{display:flex;gap:8px}
+.ref-save-btn{
+  flex:1;background:var(--purple);border:none;border-radius:10px;
+  padding:12px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;
+}
+.ref-save-btn:active{filter:brightness(1.2)}
+.ref-clear-btn{
+  background:rgba(255,255,255,.07);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;font-size:13px;color:var(--muted);cursor:pointer;
+}
+
+/* ── NÉVJELVÉNY (home header) ── */
+#name-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(224,69,120,.12);border:1px solid rgba(224,69,120,.3);
+  border-radius:20px;padding:4px 10px;font-size:12px;color:var(--pink2);
+  cursor:pointer;transition:background .2s;
+}
+#name-badge:active{background:rgba(224,69,120,.22)}
+#install-btn{
+  display:none;align-items:center;gap:5px;
+  background:rgba(91,191,194,.12);border:1px solid rgba(91,191,194,.35);
+  border-radius:20px;padding:4px 10px;font-size:12px;color:var(--teal);
+  cursor:pointer;
+}
+
+/* ── STOPPERÓRA ── */
+#call-timer{
+  font-size:12px;font-weight:700;letter-spacing:.06em;
+  color:var(--teal);background:rgba(91,191,194,.1);
+  border:1px solid rgba(91,191,194,.3);border-radius:20px;
+  padding:3px 10px;font-variant-numeric:tabular-nums;
+}
+
+/* ── COPY GOMB ── */
+.copy-btn{
+  position:absolute;top:14px;right:14px;
+  background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:8px;padding:5px 8px;cursor:pointer;
+  font-size:12px;color:var(--muted);transition:all .2s;
+  display:flex;align-items:center;gap:4px;
+}
+.copy-btn:active{background:rgba(91,191,194,.2);color:var(--teal);border-color:var(--teal)}
+.copy-btn.copied{color:var(--teal);border-color:var(--teal);background:rgba(91,191,194,.15)}
+.popup-you{position:relative}
+
+/* ── NÉVBEÁLLÍTÁS OVERLAY ── */
+#name-overlay{
+  position:fixed;inset:0;z-index:999;
+  background:rgba(9,16,36,.96);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+}
+#name-overlay.hidden{display:none}
+.name-card{
+  width:100%;max-width:380px;
+  background:var(--navy2);border:1.5px solid rgba(224,69,120,.4);
+  border-radius:20px;padding:28px 24px;
+}
+.name-card h2{font-size:18px;font-weight:700;margin-bottom:6px}
+.name-card p{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.name-input{
+  width:100%;background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,255,255,.15);border-radius:10px;
+  padding:13px 14px;font-size:16px;color:var(--white);
+  outline:none;margin-bottom:14px;
+}
+.name-input:focus{border-color:var(--pink)}
+.name-save-btn{
+  width:100%;background:var(--pink);border:none;border-radius:10px;
+  padding:13px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;
+}
+.name-save-btn:active{background:var(--pink2)}
 </style>
 </head>
 <body>
@@ -281,9 +546,11 @@ html,body{
     <iframe src="https://player.vimeo.com/video/827584757?h=7c34e0090c&background=1&autoplay=1&loop=1&muted=1&byline=0&title=0" allow="autoplay; fullscreen" allowfullscreen></iframe>
   </div>
   <div class="home-video-overlay"></div>
-  <div class="hdr" style="justify-content:center;border-bottom:2px solid var(--pink)">
-    <div style="text-align:center">
-      <div class="logo-name">📞 Call Assistant</div>
+  <div class="hdr" style="justify-content:space-between;border-bottom:2px solid var(--pink)">
+    <div class="logo-name">📞 Call Assistant</div>
+    <div style="display:flex;align-items:center;gap:7px">
+      <button id="install-btn" onclick="installPWA()" title="Telepítés a kezdőképernyőre">⬇️ Telepítés</button>
+      <div id="name-badge" onclick="openNameSetup()" title="Neved megváltoztatása">👤 <span id="name-display">Névbeállítás</span></div>
     </div>
   </div>
   <div class="body">
@@ -320,6 +587,11 @@ html,body{
       <div class="mc-title ve">VEZETŐI MODUL</div>
       <div class="mc-desc">Toborzó hívások · 4 forrás · Telefonos előszűrés</div>
     </div>
+    <div class="mode-card" style="border-color:rgba(247,193,72,.5);cursor:pointer" onclick="openCompScreen()">
+      <div class="mc-icon">🏆</div>
+      <div class="mc-title" style="color:#f7c948">VERSENY MÓD</div>
+      <div class="mc-desc">Solo cél · 2–4 fős verseny · Konfetti · CSV export</div>
+    </div>
   </div>
 </div>
 
@@ -341,12 +613,21 @@ html,body{
     <div class="hdr-info">
       <div class="hdr-title" id="ac-title"></div>
     </div>
+    <div id="solo-counter" onclick="openGoalSetup()">🎯 0/5</div>
+    <div id="call-timer">00:00</div>
   </div>
   <div class="flow-strip" id="flow-strip"></div>
+  <div class="ref-bar" id="ref-bar" onclick="openRefSwap()">
+    <span class="ref-bar-icon">👤</span>
+    <span class="ref-bar-label">Ajánló:</span>
+    <span class="ref-bar-name" id="ref-bar-name">— nincs megadva</span>
+    <span class="ref-bar-btn">Cserélem ›</span>
+  </div>
   <div class="ac-main">
     <div class="popup-card" id="popup-card">
       <div class="popup-you">
         <div class="you-lbl" id="you-lbl">🗣️ TE MONDOD</div>
+        <button class="copy-btn" id="copy-btn" onclick="copyScript()" title="Script másolása">📋 <span id="copy-label">Másolás</span></button>
         <div id="script-text"></div>
         <div id="script-tip" class="script-tip" style="display:none"></div>
       </div>
@@ -1099,23 +1380,23 @@ OBJECTIONS.forEach(o => OBJ_MAP[o.id] = o);
 // ═══════════════════════════════════════
 const CALL_TYPES = {
   atom:[
-    {id:'atom-uni',icon:'🎓',name:'Egyetemista',sub:'Saját ismerős · nincs ajánló'},
-    {id:'atom-szuloi',icon:'👨‍👩‍👧',name:'Szülői / más ajánlás',sub:'Valaki ajánlott téged'},
-    {id:'atom-30alatt',icon:'💼',name:'30 év alatti',sub:'Másodállású, fiatal ismerős'},
-    {id:'atom-30felett',icon:'🏠',name:'30 év feletti',sub:'Másodállású, komolyabb ügyfél'},
+    {id:'atom-uni',icon:'🎓',name:'Egyetemista',sub:'Saját ismerős · nincs ajánló',cat:'tanácsadás'},
+    {id:'atom-szuloi',icon:'👨‍👩‍👧',name:'Szülői / más ajánlás',sub:'Valaki ajánlott téged',cat:'tanácsadás'},
+    {id:'atom-30alatt',icon:'💼',name:'30 év alatti',sub:'Másodállású, fiatal ismerős',cat:'tanácsadás'},
+    {id:'atom-30felett',icon:'🏠',name:'30 év feletti',sub:'Másodállású, komolyabb ügyfél',cat:'tanácsadás'},
   ],
   halado:[
-    {id:'halado-ajanlas',icon:'🤝',name:'Ajánlás – Klasszikus',sub:'Időpont egyeztetés ajánlásból'},
-    {id:'halado-szerviz',icon:'🔄',name:'Szerviz egyeztetés',sub:'ABC / Kampány / Keresztértékesítés'},
-    {id:'halado-tanacsadas',icon:'📅',name:'Tanácsadás egyeztetés',sub:'Ha nem az elemzésen egyeztettük'},
-    {id:'halado-ajker',icon:'📣',name:'Ajánláskérés',sub:'Saját ügyféltől / Munkatárson át'},
-    {id:'halado-idobizt',icon:'🔔',name:'Időpontbiztosítás',sub:'Emlékeztető hívás sablonok'},
+    {id:'halado-ajanlas',icon:'🤝',name:'Ajánlás – Klasszikus',sub:'Időpont egyeztetés ajánlásból',cat:'tanácsadás'},
+    {id:'halado-szerviz',icon:'🔄',name:'Szerviz egyeztetés',sub:'ABC / Kampány / Keresztértékesítés',cat:'szerviz'},
+    {id:'halado-tanacsadas',icon:'📅',name:'Tanácsadás egyeztetés',sub:'Ha nem az elemzésen egyeztettük',cat:'elemzés'},
+    {id:'halado-ajker',icon:'📣',name:'Ajánláskérés',sub:'Saját ügyféltől / Munkatárson át',cat:'tanácsadás'},
+    {id:'halado-idobizt',icon:'🔔',name:'Időpontbiztosítás',sub:'Emlékeztető hívás sablonok',cat:'tanácsadás'},
   ],
   vezeto:[
-    {id:'vez-munkatarsi',icon:'👥',name:'Munkatársi ajánlás',sub:'HR füzet – belső hálózatból'},
-    {id:'vez-ugyfelkor',icon:'💼',name:'Ügyfélkörből ajánlás',sub:'Ügyfél adta a nevet'},
-    {id:'vez-direkt',icon:'🎯',name:'Direkt kontakt',sub:'Esemény / személyes találkozás'},
-    {id:'vez-oneletrajz',icon:'📋',name:'Önéletrajz + előszűrés',sub:'CV-s jelentkező – 5 lépéses módszer'},
+    {id:'vez-munkatarsi',icon:'👥',name:'Munkatársi ajánlás',sub:'HR füzet – belső hálózatból',cat:'felvételi'},
+    {id:'vez-ugyfelkor',icon:'💼',name:'Ügyfélkörből ajánlás',sub:'Ügyfél adta a nevet',cat:'felvételi'},
+    {id:'vez-direkt',icon:'🎯',name:'Direkt kontakt',sub:'Esemény / személyes találkozás',cat:'felvételi'},
+    {id:'vez-oneletrajz',icon:'📋',name:'Önéletrajz + előszűrés',sub:'CV-s jelentkező – 5 lépéses módszer',cat:'felvételi'},
   ]
 };
 
@@ -1127,7 +1408,7 @@ let currentMode=null, currentTypeId=null, currentStory=null, currentNodeId=null,
 // ═══════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════
-function goHome(){showScreen('home')}
+function goHome(){stopCallTimer();showScreen('home')}
 function openTraining(){
   showScreen('training');
   const body=document.getElementById('training-body');
@@ -1139,7 +1420,7 @@ function openTraining(){
         <div><div class="tc-name">${obj.label}</div><div class="tc-sub">${obj.items.length} szituáció</div></div>
         <div class="tc-arr" id="tr-arr-${i}">›</div>
       </div>
-      <div id="tr-body-${i}" style="display:none;padding:10px 4px 4px;display:flex;flex-direction:column;gap:10px">
+      <div id="tr-body-${i}" style="display:none;padding:10px 4px 4px;flex-direction:column;gap:10px">
         ${obj.items.map(item=>`
           <div style="background:var(--navy2);border-radius:var(--rs);padding:13px 14px;border:1px solid var(--border)">
             <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Ügyfél mondja:</div>
@@ -1162,7 +1443,7 @@ function toggleTrainItem(i){
   const arr=document.getElementById(`tr-arr-${i}`);
   const hdr=document.getElementById(`tr-hdr-${i}`);
   const open=body.style.display==='none';
-  body.style.display=open?'flex':'none';
+  body.style.display=open?'flex':'none';body.style.flexDirection='column';
   arr.textContent=open?'∨':'›';
   hdr.style.borderColor=open?'var(--pink)':'var(--border)';
 }
@@ -1181,9 +1462,12 @@ function selectCallType(id){
   currentStory=STORIES[id];
   currentNodeId=currentStory.start;
   nodeHistory=[currentNodeId];
+  referralName='';
+  updateRefBar();
   document.getElementById('ac-title').textContent=currentStory.title;
   renderObjBar();
   renderNode();
+  startCallTimer();
   showScreen('activecall');
 }
 function showScreen(id){
@@ -1200,6 +1484,7 @@ function navigateTo(nodeId){
 function restartFlow(){
   currentNodeId=currentStory.start;
   nodeHistory=[currentNodeId];
+  startCallTimer();
   renderNode();
   document.getElementById('popup-card').scrollTop=0;
 }
@@ -1241,6 +1526,11 @@ function renderNode(){
   else{youLbl.innerHTML='🗣️ TE MONDOD';youLbl.className='you-lbl'}
 
   let scriptHtml=node.you;
+  if(userName) scriptHtml=scriptHtml.replace(/\[Neved\]/g, userName);
+  if(referralName){
+    scriptHtml=scriptHtml.replace(/\[Ajánló neve[a-záéíóöőúüű]*\]/gi, referralName);
+    scriptHtml=scriptHtml.replace(/\[Kolléga neve[a-záéíóöőúüű]*\]/gi, referralName);
+  }
   if(isSuccess){scriptHtml='<div style="margin-bottom:10px"><span class="success-badge">🎉 Sikeres egyeztetés!</span></div>'+scriptHtml}
   document.getElementById('script-text').innerHTML=scriptHtml;
 
@@ -1248,9 +1538,19 @@ function renderNode(){
   if(node.tip){tipEl.innerHTML=node.tip.replace(/\n/g,'<br>');tipEl.style.display='block'}
   else{tipEl.style.display='none'}
 
+  // Konfetti + pont gomb success node-on
+  if(isSuccess){
+    launchConfetti();
+    pointLogged=false;
+    updateSoloCounter();
+  }
+
   const reactSec=document.getElementById('popup-reactions');
   if(!node.reactions||node.reactions.length===0){
-    reactSec.innerHTML=isSuccess?`<button class="restart-btn" onclick="restartFlow()">🔄 Új hívás indítása</button>`:'';
+    reactSec.innerHTML=isSuccess
+      ?`<button class="score-btn" id="score-btn-el" onclick="addSoloPoint()">📊 +1 Időpont rögzítése</button>
+        <button class="restart-btn" onclick="restartFlow()">🔄 Új hívás indítása</button>`
+      :'';
   } else {
     const lbl=isBranch
       ?'<div class="react-lbl branch-lbl">Melyik irány?</div>'
@@ -1334,6 +1634,747 @@ function showObjDetail(idx){
   document.getElementById('modal').classList.add('open');
   document.getElementById('modal-box').scrollTop=0;
 }
+
+// ═══════════════════════════════════════
+// KONFETTI
+// ═══════════════════════════════════════
+function launchConfetti(){
+  const colors=['#e04578','#5bbfc2','#8b6bae','#f7c948','#ff7f50','#a8edea','#fed6e3'];
+  const shapes=['2px','50%'];
+  const container=document.getElementById('confetti-container');
+  container.innerHTML='';
+  for(let i=0;i<70;i++){
+    const p=document.createElement('div');
+    p.className='cfp';
+    const size=6+Math.random()*10;
+    p.style.cssText=`
+      left:${Math.random()*100}vw;
+      width:${size}px;height:${size*(Math.random()>.5?.4:1)}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      border-radius:${shapes[Math.floor(Math.random()*shapes.length)]};
+      animation-duration:${1.8+Math.random()*2.2}s;
+      animation-delay:${Math.random()*.6}s;
+    `;
+    container.appendChild(p);
+  }
+  setTimeout(()=>{container.innerHTML=''},5000);
+}
+
+// ═══════════════════════════════════════
+// SOLO COUNTER & PONT RENDSZER
+// ═══════════════════════════════════════
+const CATS=['tanácsadás','elemzés','szerviz','felvételi'];
+let sessionLog=[]; // {cat, callId, player?, time}
+let soloGoal=parseInt(localStorage.getItem('ovb_solo_goal')||'5');
+let pointLogged=false; // hogy ne lehessen duplán koppintani egy success node-on
+
+function getCurrentCat(){
+  if(!currentTypeId) return 'tanácsadás';
+  for(const mode of Object.values(CALL_TYPES)){
+    const found=mode.find(t=>t.id===currentTypeId);
+    if(found) return found.cat||'tanácsadás';
+  }
+  return 'tanácsadás';
+}
+
+function addSoloPoint(){
+  if(pointLogged) return;
+  pointLogged=true;
+  launchConfetti();
+  const entry={cat:getCurrentCat(),callId:currentTypeId,time:Date.now()};
+  sessionLog.push(entry);
+  updateSoloCounter();
+  const btn=document.getElementById('score-btn-el');
+  if(btn){btn.classList.add('logged');btn.textContent='✅ Rögzítve!';}
+  // Cél elérve?
+  const todayCount=getTodayCount();
+  if(todayCount===soloGoal){
+    setTimeout(()=>{launchConfetti();showGoalReached();},300);
+  }
+}
+
+function getTodayCount(){
+  const today=new Date().toDateString();
+  return sessionLog.filter(e=>new Date(e.time).toDateString()===today).length;
+}
+
+function updateSoloCounter(){
+  const el=document.getElementById('solo-counter');
+  const count=getTodayCount();
+  el.textContent=`🎯 ${count}/${soloGoal}`;
+  el.style.display='block';
+  if(count>=soloGoal) el.style.borderColor='var(--teal)';
+}
+
+function openGoalSetup(){
+  document.getElementById('goal-overlay').classList.remove('hidden');
+}
+
+function pickGoal(n){
+  soloGoal=n;
+  localStorage.setItem('ovb_solo_goal',n);
+  document.querySelectorAll('.goal-opt').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  updateSoloCounter();
+  setTimeout(()=>document.getElementById('goal-overlay').classList.add('hidden'),400);
+}
+
+function showGoalReached(){
+  // Flash a counter zöldre
+  const el=document.getElementById('solo-counter');
+  el.style.color='var(--teal)';
+  el.style.borderColor='var(--teal)';
+  el.style.background='rgba(91,191,194,.2)';
+}
+
+// ═══════════════════════════════════════
+// VERSENY MÓD – v2 (terv alapú, kategória +1)
+// ═══════════════════════════════════════
+const CAT_POINTS={tanácsadás:1,elemzés:2,szerviz:1,felvételi:1};
+const CAT_NICE={tanácsadás:'🤝 Tanácsadás',elemzés:'📊 Elemzés',szerviz:'🔄 Szerviz',felvételi:'🎯 Felvételi'};
+
+let compMode='solo';
+let compPlan={tanácsadás:5,elemzés:3,szerviz:2,felvételi:1};
+let compPlayers=[]; // {name, log:[{cat,time}]}
+let compTimeLimit=30;
+let compTimerInterval=null;
+let compTimeLeft=0;
+let pendingCat=null; // verseny: melyik kategória vár játékos-választásra
+
+function playerTotalPoints(p){
+  return p.log.reduce((s,e)=>s+(CAT_POINTS[e.cat]||0),0);
+}
+function playerCatCount(p,cat){
+  return p.log.filter(e=>e.cat===cat).length;
+}
+function planTotalPoints(){
+  return CATS.reduce((s,c)=>s+compPlan[c]*(CAT_POINTS[c]||0),0);
+}
+
+function openCompScreen(){
+  showScreen('comp-screen');
+  document.getElementById('comp-setup').style.display='flex';
+  document.getElementById('comp-session').style.display='none';
+  document.getElementById('comp-results').style.display='none';
+  renderPlanInputs();
+}
+
+function renderPlanInputs(){
+  const container=document.getElementById('plan-inputs');
+  container.innerHTML=CATS.map(c=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 13px">
+      <span style="font-size:13px;font-weight:600">${CAT_NICE[c]} <span style="color:var(--muted);font-weight:400">(${CAT_POINTS[c]}pt)</span></span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="adjustPlan('${c}',-1)" style="background:rgba(255,255,255,.08);border:none;border-radius:6px;width:30px;height:30px;font-size:18px;cursor:pointer;color:var(--white);line-height:1">−</button>
+        <span id="plan-val-${c}" style="font-size:18px;font-weight:800;min-width:22px;text-align:center">${compPlan[c]}</span>
+        <button onclick="adjustPlan('${c}',1)" style="background:rgba(255,255,255,.08);border:none;border-radius:6px;width:30px;height:30px;font-size:18px;cursor:pointer;color:var(--white);line-height:1">+</button>
+      </div>
+    </div>
+  `).join('');
+  updatePlanTotal();
+}
+
+function adjustPlan(cat,delta){
+  compPlan[cat]=Math.max(0,(compPlan[cat]||0)+delta);
+  const el=document.getElementById(`plan-val-${cat}`);
+  if(el) el.textContent=compPlan[cat];
+  updatePlanTotal();
+}
+
+function updatePlanTotal(){
+  const el=document.getElementById('plan-total-pts');
+  if(el) el.textContent=planTotalPoints()+' pt';
+}
+
+function selectCompMode(mode){
+  compMode=mode;
+  document.getElementById('mode-solo-btn').classList.toggle('active',mode==='solo');
+  document.getElementById('mode-verseny-btn').classList.toggle('active',mode==='verseny');
+  document.getElementById('verseny-section').style.display=mode==='verseny'?'flex':'none';
+}
+
+function setTimeOpt(min){
+  compTimeLimit=min;
+  document.querySelectorAll('#time-opts .comp-time-opt').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function startCompSession(){
+  if(compMode==='verseny'){
+    const names=[
+      document.getElementById('p1-name').value.trim(),
+      document.getElementById('p2-name').value.trim(),
+      document.getElementById('p3-name').value.trim(),
+      document.getElementById('p4-name').value.trim(),
+    ].filter(n=>n.length>0);
+    if(names.length<2){alert('Legalább 2 játékos neve szükséges!');return;}
+    compPlayers=names.map(n=>({name:n,log:[]}));
+  } else {
+    compPlayers=[{name:userName||'Én',log:[]}];
+  }
+  sessionLog=[];
+  pendingCat=null;
+  document.getElementById('comp-setup').style.display='none';
+  document.getElementById('comp-session').style.display='flex';
+  renderSessionCatCards();
+  renderPlayerRow();
+  updateSessionDisplay();
+  if(compMode==='verseny'){
+    compTimeLeft=compTimeLimit*60;
+    document.getElementById('comp-timer-display').textContent=formatCompTime(compTimeLeft);
+    document.getElementById('comp-mode-label').textContent=`⚔️ VERSENY · ${compTimeLimit}p`;
+    compTimerInterval=setInterval(()=>{
+      compTimeLeft--;
+      document.getElementById('comp-timer-display').textContent=formatCompTime(compTimeLeft);
+      if(compTimeLeft<=60) document.getElementById('comp-timer-display').classList.add('urgent');
+      if(compTimeLeft<=0){clearInterval(compTimerInterval);compTimerInterval=null;endCompSession();}
+    },1000);
+  } else {
+    document.getElementById('comp-timer-display').textContent='Solo';
+    document.getElementById('comp-mode-label').textContent='🎯 SOLO';
+  }
+}
+
+function formatCompTime(sec){
+  const m=Math.floor(sec/60).toString().padStart(2,'0');
+  const s=(sec%60).toString().padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+function renderSessionCatCards(){
+  const area=document.getElementById('cat-btn-area');
+  area.innerHTML=CATS.map(c=>`
+    <div class="cat-session-card" id="catcard-${c}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+        <span style="font-size:14px;font-weight:700">${CAT_NICE[c]}</span>
+        <span style="font-size:11px;color:var(--muted)">${CAT_POINTS[c]}pt · terv: <strong id="cattarget-${c}">${compPlan[c]}</strong>db</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+        <div style="flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px">
+          <div id="catbar-${c}" style="height:100%;background:var(--teal);border-radius:3px;transition:width .3s;width:0%"></div>
+        </div>
+        <span id="catcount-${c}" style="font-size:16px;font-weight:800;min-width:30px;text-align:right">0</span>
+      </div>
+      <button class="comp-cat-btn" onclick="tapCatBtn('${c}')">+1 ${CAT_NICE[c]}</button>
+    </div>
+  `).join('');
+}
+
+function renderPlayerRow(){
+  const row=document.getElementById('comp-players-row');
+  if(compMode!=='verseny'||compPlayers.length<2){row.style.display='none';return;}
+  row.style.display='flex';
+  row.innerHTML=compPlayers.map((p,i)=>`
+    <div id="prow-${i}" style="background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:10px;padding:7px 12px;min-width:80px;text-align:center;flex-shrink:0">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:2px">${p.name}</div>
+      <div id="prow-pts-${i}" style="font-size:20px;font-weight:900;color:var(--teal)">0</div>
+    </div>
+  `).join('');
+}
+
+function tapCatBtn(cat){
+  if(compMode==='verseny'&&compPlayers.length>1){
+    pendingCat=cat;
+    renderPlayerPicker();
+    document.getElementById('verseny-player-picker').style.display='block';
+  } else {
+    addCompPoint(0,cat);
+  }
+}
+
+function renderPlayerPicker(){
+  const btns=document.getElementById('player-picker-btns');
+  btns.innerHTML=compPlayers.map((p,i)=>`
+    <button onclick="pickPlayer(${i})" style="background:rgba(255,255,255,.08);border:1.5px solid var(--border);border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--white);cursor:pointer">${p.name}</button>
+  `).join('');
+}
+
+function pickPlayer(idx){
+  document.getElementById('verseny-player-picker').style.display='none';
+  if(pendingCat===null) return;
+  addCompPoint(idx,pendingCat);
+  pendingCat=null;
+}
+
+function addCompPoint(playerIdx,cat){
+  const p=compPlayers[playerIdx];
+  if(!p) return;
+  p.log.push({cat,time:Date.now()});
+  sessionLog.push({cat,callId:'verseny',player:p.name,time:Date.now()});
+  launchConfetti();
+  updateSessionDisplay();
+  if(compMode==='solo'){
+    const planPts=planTotalPoints();
+    if(planPts>0&&playerTotalPoints(p)>=planPts) setTimeout(showCompGoalReached,400);
+  }
+}
+
+function updateSessionDisplay(){
+  CATS.forEach(c=>{
+    const total=compPlayers.reduce((s,p)=>s+playerCatCount(p,c),0);
+    const plan=compPlan[c]||0;
+    const pct=plan>0?Math.min(100,Math.round(total/plan*100)):0;
+    const countEl=document.getElementById(`catcount-${c}`);
+    const barEl=document.getElementById(`catbar-${c}`);
+    const card=document.getElementById(`catcard-${c}`);
+    if(countEl) countEl.textContent=total;
+    if(barEl) barEl.style.width=pct+'%';
+    if(card) card.classList.toggle('done',plan>0&&total>=plan);
+  });
+  const totalPts=compPlayers.reduce((s,p)=>s+playerTotalPoints(p),0);
+  const planPts=planTotalPoints();
+  const pct=planPts>0?Math.min(100,Math.round(totalPts/planPts*100)):0;
+  document.getElementById('sess-pts-label').textContent=`${totalPts} pont`;
+  document.getElementById('sess-pts-target').textContent=`/ ${planPts} pt terv`;
+  document.getElementById('sess-progress-fill').style.width=pct+'%';
+  if(compMode==='verseny'){
+    compPlayers.forEach((p,i)=>{
+      const el=document.getElementById(`prow-pts-${i}`);
+      if(el) el.textContent=playerTotalPoints(p);
+    });
+  }
+}
+
+function showCompGoalReached(){
+  launchConfetti();
+  setTimeout(launchConfetti,600);
+  alert('🎉 Elérted a tervedet! Szuper munka!');
+}
+
+function endCompSession(){
+  if(compTimerInterval){clearInterval(compTimerInterval);compTimerInterval=null;}
+  document.getElementById('comp-session').style.display='none';
+  document.getElementById('comp-results').style.display='flex';
+  renderCompResults();
+  launchConfetti();
+}
+
+function renderCompResults(){
+  const body=document.getElementById('comp-result-body');
+  const ranks=['🥇','🥈','🥉','4️⃣'];
+  let html=`<div style="padding:14px;border-bottom:1px solid var(--border)">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Terv vs. Teljesítés</div>
+    ${CATS.map(c=>{
+      const achieved=compPlayers.reduce((s,p)=>s+playerCatCount(p,c),0);
+      const plan=compPlan[c];
+      const pts=achieved*(CAT_POINTS[c]||1);
+      const ok=plan>0&&achieved>=plan;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+        <span style="font-size:13px">${CAT_NICE[c]}</span>
+        <span style="font-size:12px;color:var(--muted)">${achieved}/${plan} db · ${pts} pt ${ok?'✅':''}</span>
+      </div>`;
+    }).join('')}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0">
+      <span style="font-size:14px;font-weight:700">Összesen</span>
+      <span style="font-size:18px;font-weight:900;color:var(--teal)">${compPlayers.reduce((s,p)=>s+playerTotalPoints(p),0)} / ${planTotalPoints()} pt</span>
+    </div>
+  </div>`;
+  if(compMode==='verseny'&&compPlayers.length>1){
+    const sorted=[...compPlayers].sort((a,b)=>playerTotalPoints(b)-playerTotalPoints(a));
+    html+=`<div style="padding:14px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Rangsor</div>
+      ${sorted.map((p,ri)=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+          <div style="font-size:20px;width:28px">${ranks[ri]||'·'}</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">${p.name}</div>
+            <div style="font-size:11px;color:var(--muted)">${CATS.map(c=>`${CAT_NICE[c].split(' ')[1]}: ${playerCatCount(p,c)}`).join(' · ')}</div>
+          </div>
+          <div style="font-size:22px;font-weight:900;color:var(--teal)">${playerTotalPoints(p)} pt</div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+  body.innerHTML=html;
+}
+
+function resetCompScreen(){
+  if(compTimerInterval){clearInterval(compTimerInterval);compTimerInterval=null;}
+  document.getElementById('comp-timer-display').classList.remove('urgent');
+  document.getElementById('comp-setup').style.display='flex';
+  document.getElementById('comp-session').style.display='none';
+  document.getElementById('comp-results').style.display='none';
+}
+
+// ═══════════════════════════════════════
+// CSV EXPORT
+// ═══════════════════════════════════════
+function exportCSV(){
+  const today=new Date().toLocaleDateString('hu-HU');
+  const catLabels={tanácsadás:'Tanácsadás',elemzés:'Elemzés',szerviz:'Szerviz',felvételi:'Felvételi'};
+  const counts={tanácsadás:0,elemzés:0,szerviz:0,felvételi:0};
+  sessionLog.forEach(e=>{if(counts[e.cat]!==undefined)counts[e.cat]++;});
+
+  let lines=[
+    `OVB Call Assistant – ${today}`,
+    compMode==='verseny'?`Verseny mód: ${compPlayers.length} játékos, ${compTimeLimit} perc`:`Solo mód – terv: ${planTotalPoints()} pt`,
+    '',
+    'ÖSSZESÍTETT EREDMÉNY',
+    'Kategória,Darab,Pont',
+    ...CATS.map(c=>`${catLabels[c]},${counts[c]},${counts[c]*(CAT_POINTS[c]||1)}`),
+    `Összesen,${sessionLog.length},${compPlayers.reduce((s,p)=>s+playerTotalPoints(p),0)}`,
+  ];
+
+  if(compMode==='verseny'&&compPlayers.length>1){
+    lines.push('');
+    lines.push('JÁTÉKOSOK BONTÁSA');
+    lines.push(['Játékos',...CATS.map(c=>catLabels[c]),'Összpont'].join(','));
+    compPlayers.forEach(p=>{
+      const pc={tanácsadás:0,elemzés:0,szerviz:0,felvételi:0};
+      p.log.forEach(e=>{if(pc[e.cat]!==undefined)pc[e.cat]++;});
+      lines.push([p.name,...CATS.map(c=>pc[c]),playerTotalPoints(p)].join(','));
+    });
+  }
+
+  const csv='﻿'+lines.join('\n'); // BOM for Excel
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`OVB_${today.replace(/\./g,'-')}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+// ═══════════════════════════════════════
+// AJÁNLÓ NÉVCSERE
+// ═══════════════════════════════════════
+let referralName = '';
+
+function openRefSwap(){
+  document.getElementById('ref-input').value = referralName;
+  document.getElementById('ref-overlay').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('ref-input').focus(), 80);
+}
+function closeRefSwap(){
+  document.getElementById('ref-overlay').classList.add('hidden');
+}
+function saveRef(){
+  const val = document.getElementById('ref-input').value.trim();
+  referralName = val;
+  updateRefBar();
+  closeRefSwap();
+  renderNode(); // script frissítése azonnal
+}
+function clearRef(){
+  referralName = '';
+  updateRefBar();
+  closeRefSwap();
+  renderNode();
+}
+function updateRefBar(){
+  const nameEl = document.getElementById('ref-bar-name');
+  if(referralName){
+    nameEl.textContent = referralName;
+    nameEl.classList.add('set');
+  } else {
+    nameEl.textContent = '— nincs megadva';
+    nameEl.classList.remove('set');
+  }
+}
+
+// ═══════════════════════════════════════
+// 1. NÉVBEÁLLÍTÁS
+// ═══════════════════════════════════════
+let userName = localStorage.getItem('ovb_username') || '';
+
+function initNameSetup(){
+  if(!userName){
+    document.getElementById('name-overlay').classList.remove('hidden');
+  } else {
+    updateNameDisplay();
+  }
+}
+function openNameSetup(){
+  document.getElementById('name-input').value = userName;
+  document.getElementById('name-overlay').classList.remove('hidden');
+}
+function saveName(){
+  const val = document.getElementById('name-input').value.trim();
+  if(!val) return;
+  userName = val;
+  localStorage.setItem('ovb_username', userName);
+  updateNameDisplay();
+  document.getElementById('name-overlay').classList.add('hidden');
+}
+function updateNameDisplay(){
+  document.getElementById('name-display').textContent = userName || 'Névbeállítás';
+}
+// Enter gomb a névmezőn
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('name-input').addEventListener('keydown', e=>{
+    if(e.key==='Enter') saveName();
+  });
+  document.getElementById('ref-input').addEventListener('keydown', e=>{
+    if(e.key==='Enter') saveRef();
+    if(e.key==='Escape') closeRefSwap();
+  });
+  document.getElementById('ref-overlay').addEventListener('click', e=>{
+    if(e.target===document.getElementById('ref-overlay')) closeRefSwap();
+  });
+  initNameSetup();
+  initPWA();
+});
+
+// ═══════════════════════════════════════
+// 2. COPY SCRIPT GOMB
+// ═══════════════════════════════════════
+function copyScript(){
+  const text = document.getElementById('script-text').innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.getElementById('copy-btn');
+    const lbl = document.getElementById('copy-label');
+    btn.classList.add('copied');
+    lbl.textContent = 'Másolva ✓';
+    setTimeout(()=>{
+      btn.classList.remove('copied');
+      lbl.textContent = 'Másolás';
+    }, 2000);
+  }).catch(()=>{
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = document.getElementById('script-text').innerText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    document.getElementById('copy-label').textContent = 'Másolva ✓';
+    setTimeout(()=>{ document.getElementById('copy-label').textContent = 'Másolás'; }, 2000);
+  });
+}
+
+// ═══════════════════════════════════════
+// 3. STOPPERÓRA
+// ═══════════════════════════════════════
+let callTimerInterval = null;
+let callStartTime = 0;
+
+function startCallTimer(){
+  stopCallTimer();
+  callStartTime = Date.now();
+  callTimerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
+}
+function stopCallTimer(){
+  if(callTimerInterval){ clearInterval(callTimerInterval); callTimerInterval=null; }
+  document.getElementById('call-timer').textContent = '00:00';
+}
+function updateTimer(){
+  const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+  const m = Math.floor(elapsed / 60).toString().padStart(2,'0');
+  const s = (elapsed % 60).toString().padStart(2,'0');
+  document.getElementById('call-timer').textContent = `${m}:${s}`;
+}
+
+// ═══════════════════════════════════════
+// 4. PWA TELEPÍTÉS
+// ═══════════════════════════════════════
+let deferredInstallPrompt = null;
+
+function initPWA(){
+  // Manifest generálása blob-ként
+  const manifest = {
+    name: 'OVB Call Assistant',
+    short_name: 'OVB Hívás',
+    display: 'standalone',
+    background_color: '#0d2244',
+    theme_color: '#0d2244',
+    start_url: '.',
+    icons: [{
+      src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230d2244'/><text y='.85em' font-size='68' x='16'>📞</text></svg>",
+      sizes: 'any',
+      type: 'image/svg+xml'
+    }]
+  };
+  try {
+    const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = URL.createObjectURL(blob);
+    document.head.appendChild(link);
+  } catch(e){}
+
+  // Service Worker regisztráció (cache + offline)
+  if('serviceWorker' in navigator){
+    const swCode = `
+      const CACHE='ovb-v1';
+      self.addEventListener('install',e=>{self.skipWaiting()});
+      self.addEventListener('activate',e=>{e.waitUntil(clients.claim())});
+      self.addEventListener('fetch',e=>{
+        e.respondWith(caches.open(CACHE).then(c=>
+          c.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+            c.put(e.request,res.clone());return res;
+          }))
+        ));
+      });
+    `;
+    try {
+      const swBlob = new Blob([swCode],{type:'application/javascript'});
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob));
+    } catch(e){}
+  }
+
+  // Android / Chrome install prompt
+  window.addEventListener('beforeinstallprompt', e=>{
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const btn = document.getElementById('install-btn');
+    if(btn) btn.style.display = 'inline-flex';
+  });
+  window.addEventListener('appinstalled', ()=>{
+    const btn = document.getElementById('install-btn');
+    if(btn) btn.style.display = 'none';
+    deferredInstallPrompt = null;
+  });
+}
+function installPWA(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(()=>{ deferredInstallPrompt=null; });
+  }
+}
+
 </script>
+
+<!-- ══ KONFETTI ══ -->
+<div id="confetti-container"></div>
+
+<!-- ══ VERSENY KÉPERNYŐ ══ -->
+<div class="screen" id="comp-screen">
+
+  <!-- SETUP -->
+  <div id="comp-setup" style="display:flex;flex-direction:column;height:100dvh">
+    <div class="hdr">
+      <button class="btn-back" onclick="goHome()">← Vissza</button>
+      <div class="hdr-info"><div class="hdr-title">🏆 Verseny / Solo</div></div>
+    </div>
+    <div class="comp-setup-body">
+
+      <div>
+        <div class="comp-slabel">Játékmód</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="comp-time-opt active" id="mode-solo-btn" onclick="selectCompMode('solo')">🎯 Solo</button>
+          <button class="comp-time-opt" id="mode-verseny-btn" onclick="selectCompMode('verseny')">⚔️ Verseny</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="comp-slabel">Mai terv – hány db célt tűzöl ki?</div>
+        <div id="plan-inputs" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <div style="background:rgba(91,191,194,.08);border:1px solid rgba(91,191,194,.25);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px;color:var(--muted)">Tervezett összpontszám</div>
+        <div style="font-size:24px;font-weight:900;color:var(--teal)" id="plan-total-pts">–</div>
+      </div>
+
+      <div id="verseny-section" style="display:none;flex-direction:column;gap:6px">
+        <div class="comp-slabel">Játékosok neve (min. 2)</div>
+        <input class="comp-player-input" id="p1-name" placeholder="1. játékos neve" maxlength="16">
+        <input class="comp-player-input" id="p2-name" placeholder="2. játékos neve" maxlength="16">
+        <input class="comp-player-input" id="p3-name" placeholder="3. játékos (opcionális)" maxlength="16">
+        <input class="comp-player-input" id="p4-name" placeholder="4. játékos (opcionális)" maxlength="16">
+        <div class="comp-slabel" style="margin-top:8px">Időkorlát</div>
+        <div class="comp-time-opts" id="time-opts">
+          <button class="comp-time-opt" onclick="setTimeOpt(15)">15p</button>
+          <button class="comp-time-opt active" onclick="setTimeOpt(30)">30p</button>
+          <button class="comp-time-opt" onclick="setTimeOpt(45)">45p</button>
+          <button class="comp-time-opt" onclick="setTimeOpt(60)">60p</button>
+        </div>
+      </div>
+
+      <button class="comp-start-btn" onclick="startCompSession()">🚀 Indítás!</button>
+    </div>
+  </div>
+
+  <!-- SESSION -->
+  <div id="comp-session" style="display:none;flex-direction:column;height:100dvh">
+    <div class="comp-hdr">
+      <div style="font-size:11px;font-weight:700;color:var(--muted)" id="comp-mode-label">SOLO</div>
+      <div class="comp-timer-display" id="comp-timer-display">–</div>
+      <button class="comp-end-btn" onclick="endCompSession()">Befejezem</button>
+    </div>
+    <!-- Solo / Verseny összpontszám sáv -->
+    <div id="sess-score-bar" style="padding:9px 14px;background:rgba(0,0,0,.18);border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:700" id="sess-pts-label">0 pont</span>
+        <span style="font-size:12px;color:var(--muted)" id="sess-pts-target">/ ? pt terv</span>
+      </div>
+      <div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px">
+        <div id="sess-progress-fill" style="height:100%;background:var(--teal);border-radius:3px;transition:width .35s;width:0%"></div>
+      </div>
+    </div>
+    <!-- Verseny: játékos scoreboard -->
+    <div id="comp-players-row" style="display:none;flex-shrink:0;padding:8px 12px;gap:8px;border-bottom:1px solid var(--border);overflow-x:auto;flex-wrap:nowrap"></div>
+    <!-- Kategória +1 gombok -->
+    <div style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px" id="cat-btn-area"></div>
+    <!-- Verseny: ki szerzett pontot -->
+    <div id="verseny-player-picker" style="display:none;padding:9px 12px;background:rgba(0,0,0,.22);border-top:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px">👇 Ki szerzett pontot?</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap" id="player-picker-btns"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="comp-results" style="display:none;flex-direction:column;height:100dvh">
+    <div class="hdr">
+      <div class="hdr-info"><div class="hdr-title">🏆 Eredmény</div></div>
+    </div>
+    <div class="comp-result-body" id="comp-result-body"></div>
+    <div class="comp-footer">
+      <button class="comp-foot-btn" onclick="exportCSV()">📊 CSV</button>
+      <button class="comp-foot-btn" onclick="resetCompScreen()">🔄 Új</button>
+      <button class="comp-foot-btn" onclick="goHome()">🏠 Főoldal</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ CÉLALAPÍTÁS OVERLAY (solo, hívás közben) ══ -->
+<div id="goal-overlay" class="hidden">
+  <div class="goal-card">
+    <div style="font-size:28px;margin-bottom:12px">🎯</div>
+    <h3>Napi cél</h3>
+    <p>Hány időpontot szeretnél ma megkötni?</p>
+    <div class="goal-options" id="goal-opt-btns">
+      <button class="goal-opt" onclick="pickGoal(3)">3</button>
+      <button class="goal-opt" onclick="pickGoal(5)">5</button>
+      <button class="goal-opt" onclick="pickGoal(10)">10</button>
+      <button class="goal-opt" onclick="pickGoal(20)">20</button>
+    </div>
+    <button class="goal-confirm" onclick="document.getElementById('goal-overlay').classList.add('hidden')">Bezárás</button>
+  </div>
+</div>
+
+<!-- ══ KATEGÓRIA PICKER (verseny mód +1 gombhoz) ══ -->
+<div id="cat-overlay" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(9,16,36,.88);align-items:flex-end;justify-content:center">
+  <div style="width:100%;max-width:500px;background:var(--navy2);border:1.5px solid rgba(247,193,72,.4);border-radius:20px 20px 0 0;padding:20px 16px 28px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--muted)">📋 Milyen hívás volt?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="cat-picker-btns"></div>
+  </div>
+</div>
+
+<!-- ══ AJÁNLÓ NÉVCSERE OVERLAY ══ -->
+<div id="ref-overlay" class="hidden">
+  <div class="ref-sheet">
+    <h3>👤 Ajánló neve</h3>
+    <p>Add meg az aktuális ajánló nevét – a scriptekben automatikusan behelyettesítődik.</p>
+    <input id="ref-input" class="ref-input" type="text" placeholder="pl. Zoé, Edvárd, Kovács Péter" maxlength="40" autocomplete="off">
+    <div class="ref-btns">
+      <button class="ref-save-btn" onclick="saveRef()">Beállítom →</button>
+      <button class="ref-clear-btn" onclick="clearRef()">Törlöm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NÉVBEÁLLÍTÁS OVERLAY ══ -->
+<div id="name-overlay" class="hidden">
+  <div class="name-card">
+    <div style="font-size:32px;margin-bottom:14px">👤</div>
+    <h2>Mi a neved?</h2>
+    <p>A scriptekben automatikusan a te neved fog szerepelni, nem kell kézzel kitölteni.</p>
+    <input id="name-input" class="name-input" type="text" placeholder="pl. Edvárd" maxlength="30" autocomplete="off">
+    <button class="name-save-btn" onclick="saveName()">Mentés és tovább →</button>
+  </div>
+</div>
+
 </body>
 </html>
