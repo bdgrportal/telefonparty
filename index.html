@@ -58,6 +58,10 @@ html,body{
 }
 .mode-card.atom{border-color:var(--teal2)}
 .mode-card.halado{border-color:var(--purple)}
+.mode-card.training{border-color:var(--pink)}
+.mc-title.tr{color:var(--pink)}
+.mode-card.vezeto{border-color:rgba(139,107,174,.4);opacity:.75;cursor:default}
+.mc-title.ve{color:var(--purple)}
 .mode-card:active{filter:brightness(1.2)}
 .mc-icon{font-size:28px;margin-bottom:6px}
 .mc-title{font-size:18px;font-weight:800;margin-bottom:3px}
@@ -100,68 +104,44 @@ html,body{
 .fs-name.active{color:var(--white);font-weight:700}
 .fs-arr{font-size:12px;color:rgba(255,255,255,.2);margin:0 1px;flex-shrink:0}
 
-/* THREAD — scrollable conversation log */
-.thread{
-  flex:1;overflow-y:auto;padding:14px;
-  display:flex;flex-direction:column;gap:10px;
+/* Center area — holds popup card */
+.ac-main{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:14px;overflow:hidden;
+}
+
+/* THE POPUP CARD */
+.popup-card{
+  width:100%;max-width:500px;max-height:100%;
+  overflow-y:auto;border-radius:16px;
+  background:var(--navy2);
+  border:1.5px solid rgba(224,69,120,.55);
+  box-shadow:0 8px 48px rgba(0,0,0,.75),0 0 0 1px rgba(224,69,120,.08);
   scrollbar-width:thin;scrollbar-color:var(--border) transparent;
 }
+.popup-card.success{border-color:rgba(91,191,194,.6)}
+.popup-card.branch-mode{border-color:rgba(91,191,194,.5)}
 
-/* Past YOU cards (faded) */
-.th-you{
-  background:var(--navy2);
-  border-left:3px solid rgba(224,69,120,.3);
-  border-radius:0 var(--rs) var(--rs) 0;
-  padding:10px 12px;
-  opacity:.55;transition:opacity .2s;
-}
-/* Active YOU card */
-.th-you.th-current{
-  opacity:1;
-  border-left:none;
-  border:1.5px solid rgba(224,69,120,.6);
-  border-radius:var(--r);
-  box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 0 1px rgba(224,69,120,.08);
-}
-.th-you.th-success{border-color:rgba(91,191,194,.6)}
-.th-you.th-branch{border-color:rgba(91,191,194,.5)}
-
-.th-you-lbl{
+/* You section */
+.popup-you{padding:14px 15px 12px;border-bottom:1px solid var(--border)}
+.you-lbl{
   font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--pink);margin-bottom:8px;
+  color:var(--pink);margin-bottom:9px;display:flex;align-items:center;gap:5px;
 }
-.th-you.th-success .th-you-lbl{color:var(--teal)}
-.th-you.th-branch .th-you-lbl{color:var(--teal)}
-.th-you-text{font-size:14px;line-height:1.7;white-space:pre-wrap}
-.th-you-text .hl{color:var(--pink2);font-weight:600}
-.th-you-text .hl-t{color:var(--teal);font-weight:600}
-.th-you-text .var{
+.you-lbl.branch{color:var(--teal)}
+.you-lbl.success{color:var(--teal)}
+#script-text{font-size:14px;line-height:1.7;white-space:pre-wrap}
+#script-text .hl{color:var(--pink2);font-weight:600}
+#script-text .hl-t{color:var(--teal);font-weight:600}
+#script-text .var{
   background:rgba(224,69,120,.15);color:var(--pink2);
   border-radius:4px;padding:1px 5px;font-style:italic;
 }
-/* Past YOU text is smaller */
-.th-you:not(.th-current) .th-you-text{font-size:13px;line-height:1.6}
-
-/* Client response bubble */
-.th-client{
-  margin-left:20px;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(91,191,194,.25);
-  border-radius:var(--rs);padding:9px 12px;
-}
-.th-client-lbl{
-  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
-  color:var(--teal2);margin-bottom:4px;
-}
-.th-client-text{font-size:13px;color:var(--muted);font-style:italic}
-
-/* Tip box */
-.th-tip{
+.script-tip{
   margin-top:10px;padding:9px 11px;
   background:rgba(224,154,42,.08);border:1px solid rgba(224,154,42,.25);
-  border-radius:var(--rs);font-size:12px;color:#e0c070;line-height:1.6;
+  border-radius:var(--rs);font-size:12px;color:#e0c070;line-height:1.6;white-space:pre-wrap;
 }
-/* Success badge */
 .success-badge{
   display:inline-flex;align-items:center;gap:5px;
   background:var(--teal2);color:white;border-radius:20px;
@@ -284,20 +264,41 @@ html,body{
   <div class="hdr" style="justify-content:center;border-bottom:2px solid var(--pink)">
     <div style="text-align:center">
       <div class="logo-name">📞 Call Assistant</div>
-      <div style="font-size:10px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-top:2px">OVB · Hívás segédlet</div>
     </div>
   </div>
   <div class="body">
-    <div style="text-align:center;color:var(--muted);font-size:12px;padding-bottom:4px">Válassz módot a hívás előtt</div>
+    <div style="background:var(--navy2);border:1px solid rgba(91,191,194,.35);border-radius:var(--r);padding:15px 16px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;right:0;bottom:0;left:0;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:20px 20px;pointer-events:none"></div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:11px;display:flex;align-items:center;gap:6px;position:relative">⚡ Telefonparty előkészület</div>
+      <div style="display:flex;flex-direction:column;gap:8px;position:relative">
+        <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.5;color:rgba(255,255,255,.85)"><span style="color:var(--teal);font-size:14px;flex-shrink:0;margin-top:1px">✓</span>Ellenőrizd a <strong style="color:var(--white)">naptárad, telefonod, laptopod</strong> – minden technikai feltétel legyen adott</div>
+        <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.5;color:rgba(255,255,255,.85)"><span style="color:var(--teal);font-size:14px;flex-shrink:0;margin-top:1px">✓</span>Legyen <strong style="color:var(--white)">jó kedved és jó hangulatod</strong> – minden esetben érződik a hangon</div>
+        <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.5;color:rgba(255,255,255,.85)"><span style="color:var(--teal);font-size:14px;flex-shrink:0;margin-top:1px">✓</span>Fogj össze a <strong style="color:var(--white)">vezetőddel vagy munkatársaiddal</strong> – szervezzetek telefonparty versenyt</div>
+        <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.5;color:rgba(255,255,255,.85)"><span style="color:var(--teal);font-size:14px;flex-shrink:0;margin-top:1px">✓</span>Bizonyosodj meg róla, hogy <strong style="color:var(--white)">nem zavarsz másokat</strong> és körülötted sincs hangzavar</div>
+        <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.5;color:rgba(255,255,255,.85)"><span style="color:var(--teal);font-size:14px;flex-shrink:0;margin-top:1px">✓</span>Használj <strong style="color:var(--white)">fülest</strong> – kényelmesebb és profibb hangzást ad</div>
+        <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.5;color:rgba(255,255,255,.85)"><span style="color:var(--pink);font-size:14px;flex-shrink:0;margin-top:1px">🎯</span>Addig ne hagyd abba, amíg a <strong style="color:var(--pink2)">kitűzött tervszámodat</strong> nem teljesítetted</div>
+      </div>
+    </div>
+    <div style="text-align:center;color:var(--muted);font-size:12px">Válassz módot a hívás előtt</div>
     <div class="mode-card atom" onclick="selectMode('atom')">
       <div class="mc-icon">🌱</div>
-      <div class="mc-title t">ATOM KEZDŐ</div>
-      <div class="mc-desc">Ismerősi körből egyeztetsz · Első hívások</div>
+      <div class="mc-title t">KEZDŐ MUNKATÁRS</div>
+      <div class="mc-desc">Gyakornoki füzetből egyeztetsz · Első hívások</div>
     </div>
     <div class="mode-card halado" onclick="selectMode('halado')">
       <div class="mc-icon">🎯</div>
       <div class="mc-title p">HALADÓ</div>
       <div class="mc-desc">Ajánlásból dolgozol · Szerviz · Tanácsadás</div>
+    </div>
+    <div class="mode-card training" onclick="openTraining()">
+      <div class="mc-icon">🥊</div>
+      <div class="mc-title tr">KIFOGÁS TRAINING BOX</div>
+      <div class="mc-desc">Gyakorold be az összes kifogástípust · Flashcard módban</div>
+    </div>
+    <div class="mode-card vezeto" onclick="">
+      <div class="mc-icon">📋</div>
+      <div class="mc-title ve">VEZETŐI MODUL</div>
+      <div class="mc-desc" style="display:flex;align-items:center;gap:6px"><span style="background:rgba(139,107,174,.2);border:1px solid var(--purple);border-radius:20px;padding:2px 9px;font-size:11px;color:var(--purple);font-weight:600">Hamarosan</span> Vezetői scriptek feltöltés alatt</div>
     </div>
   </div>
 </div>
@@ -322,8 +323,28 @@ html,body{
     </div>
   </div>
   <div class="flow-strip" id="flow-strip"></div>
-  <div class="thread" id="thread"></div>
+  <div class="ac-main">
+    <div class="popup-card" id="popup-card">
+      <div class="popup-you">
+        <div class="you-lbl" id="you-lbl">🗣️ TE MONDOD</div>
+        <div id="script-text"></div>
+        <div id="script-tip" class="script-tip" style="display:none"></div>
+      </div>
+      <div class="popup-reactions" id="popup-reactions"></div>
+    </div>
+  </div>
   <div class="obj-bar" id="obj-bar"></div>
+</div>
+
+<!-- ══ KIFOGÁS TRAINING ══ -->
+<div class="screen" id="training">
+  <div class="hdr">
+    <button class="btn-back" onclick="goHome()">← Vissza</button>
+    <div class="hdr-info">
+      <div class="hdr-title">🥊 Kifogás Training Box</div>
+    </div>
+  </div>
+  <div class="body" id="training-body" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px"></div>
 </div>
 
 <!-- ══ MODAL ══ -->
@@ -777,12 +798,49 @@ const CALL_TYPES = {
 // STATE
 // ═══════════════════════════════════════
 let currentMode=null, currentTypeId=null, currentStory=null, currentNodeId=null, nodeHistory=[];
-let conversationHistory=[]; // [{type:'you',label,text,tip?} | {type:'client',icon,text}]
 
 // ═══════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════
 function goHome(){showScreen('home')}
+function openTraining(){
+  showScreen('training');
+  const body=document.getElementById('training-body');
+  let html='<div style="font-size:12px;color:var(--muted);margin-bottom:4px">Kattints egy kategóriára – jelennek meg a scriptjei</div>';
+  OBJECTIONS.forEach((obj,i)=>{
+    html+=`<div style="cursor:pointer" onclick="toggleTrainItem(${i})">
+      <div class="type-card" id="tr-hdr-${i}">
+        <div class="tc-icon">${obj.icon}</div>
+        <div><div class="tc-name">${obj.label}</div><div class="tc-sub">${obj.items.length} szituáció</div></div>
+        <div class="tc-arr" id="tr-arr-${i}">›</div>
+      </div>
+      <div id="tr-body-${i}" style="display:none;padding:10px 4px 4px;display:flex;flex-direction:column;gap:10px">
+        ${obj.items.map(item=>`
+          <div style="background:var(--navy2);border-radius:var(--rs);padding:13px 14px;border:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Ügyfél mondja:</div>
+            <div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:12px;line-height:1.5">${item.trigger}</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pink);margin-bottom:6px">Te válaszolod:</div>
+            <div style="font-size:14px;line-height:1.7;color:var(--white)">${item.resp}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  body.innerHTML=html;
+  // Fix: collapse all items initially
+  OBJECTIONS.forEach((_,i)=>{
+    const el=document.getElementById(`tr-body-${i}`);
+    if(el) el.style.display='none';
+  });
+}
+function toggleTrainItem(i){
+  const body=document.getElementById(`tr-body-${i}`);
+  const arr=document.getElementById(`tr-arr-${i}`);
+  const hdr=document.getElementById(`tr-hdr-${i}`);
+  const open=body.style.display==='none';
+  body.style.display=open?'flex':'none';
+  arr.textContent=open?'∨':'›';
+  hdr.style.borderColor=open?'var(--pink)':'var(--border)';
+}
 function selectMode(mode){currentMode=mode;showScreen('calltype');renderCallTypes()}
 function goBack(){
   if(nodeHistory.length>1){
@@ -798,7 +856,6 @@ function selectCallType(id){
   currentStory=STORIES[id];
   currentNodeId=currentStory.start;
   nodeHistory=[currentNodeId];
-  conversationHistory=[];
   document.getElementById('ac-title').textContent=currentStory.title;
   renderObjBar();
   renderNode();
@@ -810,22 +867,16 @@ function showScreen(id){
 }
 function navigateTo(nodeId){
   if(nodeId.startsWith('__OBJ_')){openObjDirect(nodeId);return}
-  // Save current node to history
-  const cur=currentStory.nodes[currentNodeId];
-  if(cur){
-    conversationHistory.push({type:'you',label:cur.label,text:cur.you,tip:cur.tip||null});
-    const chosen=cur.reactions.find(r=>r.next===nodeId);
-    if(chosen) conversationHistory.push({type:'client',icon:chosen.icon||'💬',text:chosen.text});
-  }
   currentNodeId=nodeId;
   nodeHistory.push(nodeId);
   renderNode();
+  document.getElementById('popup-card').scrollTop=0;
 }
 function restartFlow(){
   currentNodeId=currentStory.start;
   nodeHistory=[currentNodeId];
-  conversationHistory=[];
   renderNode();
+  document.getElementById('popup-card').scrollTop=0;
 }
 
 // ═══════════════════════════════════════
@@ -833,7 +884,7 @@ function restartFlow(){
 // ═══════════════════════════════════════
 function renderCallTypes(){
   const types=CALL_TYPES[currentMode];
-  document.getElementById('ct-title').textContent=currentMode==='atom'?'🌱 ATOM KEZDŐ':'🎯 HALADÓ';
+  document.getElementById('ct-title').textContent=currentMode==='atom'?'🌱 KEZDŐ MUNKATÁRS':'🎯 HALADÓ';
   const list=document.getElementById('ct-list');
   list.innerHTML='<div class="slabel">Válassz call típust</div>';
   types.forEach(t=>{
@@ -846,7 +897,7 @@ function renderCallTypes(){
 }
 
 // ═══════════════════════════════════════
-// RENDER NODE (thread-based)
+// RENDER NODE
 // ═══════════════════════════════════════
 function renderNode(){
   const node=currentStory.nodes[currentNodeId];
@@ -856,42 +907,28 @@ function renderNode(){
 
   renderFlowStrip(node);
 
-  const thread=document.getElementById('thread');
-  let html='';
+  const card=document.getElementById('popup-card');
+  card.className='popup-card'+(isSuccess?' success':isBranch?' branch-mode':'');
 
-  // ── Past conversation history ──
-  conversationHistory.forEach(item=>{
-    if(item.type==='you'){
-      html+=`<div class="th-you">
-        <div class="th-you-lbl">🗣️ TE · ${item.label}</div>
-        <div class="th-you-text">${item.text}</div>
-        ${item.tip?`<div class="th-tip">${item.tip.replace(/\n/g,'<br>')}</div>`:''}
-      </div>`;
-    } else {
-      html+=`<div class="th-client">
-        <div class="th-client-lbl">💬 Ügyfél válasza</div>
-        <div class="th-client-text">${item.icon} ${item.text}</div>
-      </div>`;
-    }
-  });
+  const youLbl=document.getElementById('you-lbl');
+  if(isSuccess){youLbl.textContent='✅ IDŐPONT MEGKÖTVE';youLbl.className='you-lbl success'}
+  else if(isBranch){youLbl.textContent='🔀 VÁLASSZ IRÁNYT';youLbl.className='you-lbl branch'}
+  else{youLbl.innerHTML='🗣️ TE MONDOD';youLbl.className='you-lbl'}
 
-  // ── Current active card ──
-  let curLbl='🗣️ TE MONDOD';
-  let curCls='th-current';
-  if(isSuccess){curLbl='✅ IDŐPONT MEGKÖTVE';curCls='th-current th-success'}
-  if(isBranch){curLbl='🔀 VÁLASSZ IRÁNYT';curCls='th-current th-branch'}
+  let scriptHtml=node.you;
+  if(isSuccess){scriptHtml='<div style="margin-bottom:10px"><span class="success-badge">🎉 Sikeres egyeztetés!</span></div>'+scriptHtml}
+  document.getElementById('script-text').innerHTML=scriptHtml;
 
-  html+=`<div class="th-you ${curCls}">
-    <div class="th-you-lbl">${curLbl}</div>
-    ${isSuccess?'<div style="margin-bottom:9px"><span class="success-badge">🎉 Sikeres egyeztetés!</span></div>':''}
-    <div class="th-you-text">${node.you}</div>
-    ${node.tip?`<div class="th-tip">${node.tip.replace(/\n/g,'<br>')}</div>`:''}
-  </div>`;
+  const tipEl=document.getElementById('script-tip');
+  if(node.tip){tipEl.innerHTML=node.tip.replace(/\n/g,'<br>');tipEl.style.display='block'}
+  else{tipEl.style.display='none'}
 
-  // ── Reactions / branch choices ──
-  if(node.reactions&&node.reactions.length>0){
+  const reactSec=document.getElementById('popup-reactions');
+  if(!node.reactions||node.reactions.length===0){
+    reactSec.innerHTML=isSuccess?`<button class="restart-btn" onclick="restartFlow()">🔄 Új hívás indítása</button>`:'';
+  } else {
     const lbl=isBranch
-      ?'<div class="react-lbl branch-lbl">🔀 Melyik irány?</div>'
+      ?'<div class="react-lbl branch-lbl">Melyik irány?</div>'
       :'<div class="react-lbl">💬 Az ügyfél reagál...</div>';
     let btns='<div class="react-list">';
     node.reactions.forEach(r=>{
@@ -903,15 +940,9 @@ function renderNode(){
       </button>`;
     });
     btns+='</div>';
-    html+=lbl+btns;
+    if(isSuccess) btns+=`<button class="restart-btn" onclick="restartFlow()">🔄 Új hívás indítása</button>`;
+    reactSec.innerHTML=lbl+btns;
   }
-  if(isSuccess){
-    html+=`<button class="restart-btn" onclick="restartFlow()">🔄 Új hívás indítása</button>`;
-  }
-
-  html+='<div style="height:16px"></div>';
-  thread.innerHTML=html;
-  requestAnimationFrame(()=>{ thread.scrollTop=thread.scrollHeight; });
 }
 
 // ═══════════════════════════════════════
