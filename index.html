@@ -46,7 +46,23 @@ html,body{
 .btn-back:active{opacity:.7}
 
 /* ════════ HOME ════════ */
-#home .body{flex:1;overflow-y:auto;display:flex;flex-direction:column;padding:18px 16px 28px;gap:12px}
+#home{position:relative}
+#home .body{flex:1;overflow-y:auto;display:flex;flex-direction:column;padding:18px 16px 28px;gap:12px;position:relative;z-index:2}
+#home .hdr{position:relative;z-index:2}
+.home-video-bg{
+  position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;
+}
+.home-video-bg iframe{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:177.78vh;height:56.25vw;
+  min-width:100%;min-height:100%;
+  opacity:.13;border:none;
+}
+.home-video-overlay{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:rgba(13,34,68,.78);
+}
 .logo-name{
   font-size:26px;font-weight:900;letter-spacing:-.5px;text-align:center;margin-bottom:12px;
   background:linear-gradient(135deg,var(--teal),var(--pink));
@@ -60,7 +76,7 @@ html,body{
 .mode-card.halado{border-color:var(--purple)}
 .mode-card.training{border-color:var(--pink)}
 .mc-title.tr{color:var(--pink)}
-.mode-card.vezeto{border-color:rgba(139,107,174,.4);opacity:.75;cursor:default}
+.mode-card.vezeto{border-color:rgba(139,107,174,.6)}
 .mc-title.ve{color:var(--purple)}
 .mode-card:active{filter:brightness(1.2)}
 .mc-icon{font-size:24px;margin-bottom:5px}
@@ -261,6 +277,10 @@ html,body{
 
 <!-- ══ HOME ══ -->
 <div class="screen active" id="home">
+  <div class="home-video-bg">
+    <iframe src="https://player.vimeo.com/video/827584757?h=7c34e0090c&background=1&autoplay=1&loop=1&muted=1&byline=0&title=0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+  </div>
+  <div class="home-video-overlay"></div>
   <div class="hdr" style="justify-content:center;border-bottom:2px solid var(--pink)">
     <div style="text-align:center">
       <div class="logo-name">📞 Call Assistant</div>
@@ -295,10 +315,10 @@ html,body{
       <div class="mc-title tr">KIFOGÁS TRAINING BOX</div>
       <div class="mc-desc">Gyakorold be az összes kifogástípust · Flashcard módban</div>
     </div>
-    <div class="mode-card vezeto" onclick="">
+    <div class="mode-card vezeto" onclick="selectMode('vezeto')">
       <div class="mc-icon">📋</div>
       <div class="mc-title ve">VEZETŐI MODUL</div>
-      <div class="mc-desc" style="display:flex;align-items:center;gap:6px"><span style="background:rgba(139,107,174,.2);border:1px solid var(--purple);border-radius:20px;padding:2px 9px;font-size:11px;color:var(--purple);font-weight:600">Hamarosan</span> Vezetői scriptek feltöltés alatt</div>
+      <div class="mc-desc">Toborzó hívások · 4 forrás · Telefonos előszűrés</div>
     </div>
   </div>
 </div>
@@ -682,6 +702,246 @@ const STORIES = {
         reactions:[]}
     }
   },
+  // ══════════════ VEZETŐI MODUL ══════════════
+
+  'vez-munkatarsi':{
+    title:'Munkatársi ajánlás – HR füzet',totalSteps:5,start:'nyito',
+    nodes:{
+      nyito:{step:1,label:'Nyitó',
+        you:'Szia, én <span class="var">[Neved]</span> vagyok és <span class="var">[Jelölt neve]</span>t keresem – jókor hívlak?',
+        reactions:[
+          {icon:'😊',text:'"Igen, én vagyok – jókor."',next:'intro'},
+          {icon:'⏱️',text:'"Most nem ideális..."',next:'visszahivas'},
+        ]},
+      visszahivas:{step:1,label:'Visszahívás',
+        you:'Persze, visszahívhatlak – mikor a legbiztosabb, hogy elérsz?',
+        reactions:[{icon:'📅',text:'"X-kor / X-kor érek rá."',next:'intro'}]},
+      intro:{step:2,label:'Bemutatkozás',
+        you:'Azzal kapcsolatban hívlak, hogy van egy közös kapcsolatunk: <span class="var">[Ajánló neve]</span> kollégám – ha minden igaz, <span class="hl-t">ismeritek egymást</span>. Nemrég beszéltünk, és a neved munka kapcsán merült fel – azt mondta, érdemes lenne felhívjalak.\n\nA 11. kerületi irodánk bővítésén dolgozunk, és elképzelhető, hogy találunk közös nevezőt.',
+        reactions:[
+          {icon:'✅',text:'"Igen, ismerjük egymást – mondd csak!"',next:'pitch'},
+          {icon:'❓',text:'"Mivel foglalkoztok?"',next:'mivel'},
+          {icon:'❓',text:'"Hogyan kerültem szóba?"',next:'hogyan'},
+        ]},
+      mivel:{step:3,label:'Mivel foglalkozunk',
+        you:'Pénzügyi szolgáltatóként dolgozunk és több pozícióba is keresünk új kollégát a 11. kerületi irodánkba. <span class="var">[Ajánló neve]</span> mondta, hogy talán érdekes lehet neked – ezért kereslek.',
+        reactions:[{icon:'💬',text:'"Értem, és mi lenne a szerepem?"',next:'pitch'}]},
+      hogyan:{step:3,label:'Hogyan kerültél szóba',
+        you:'Működik nálunk egy belső ajánlói rendszer – a meglévő munkatársaink gondolhatnak a környezetükből olyanokra, akiknek érdekes lehet akár egy új munkahely, akár egy mellék-lehetőség. <span class="var">[Ajánló neve]</span> így gondolt rád.',
+        reactions:[{icon:'💬',text:'"Értem, oké."',next:'pitch'}]},
+      pitch:{step:4,label:'Pitch',
+        you:'Pénzügyi szolgáltatóként dolgozunk és több pozícióba is keresünk kollégát. Nyilván telefonban ismeretlenül nem tennék állásajánlatot – viszont meg szerettem volna kérdezni: <span class="hl">20 percben meghallgatnád</span>, hogy mi az elképzelés és irány?',
+        reactions:[
+          {icon:'✅',text:'"Igen, végülis miért ne!"',next:'idopont'},
+          {icon:'📧',text:'"Inkább küldj egy összefoglalót előbb."',next:'email_elobb'},
+          {icon:'📞',text:'"Visszahívhatlak / visszahívlak."',next:'visszahivas2'},
+          {icon:'🙅',text:'"Nem igazán az én világom ez..."',next:'nem_erdekli'},
+        ]},
+      email_elobb:{step:4,label:'Email előbb',
+        you:'Persze! Elküldöm az összefoglalót – olvasd át nyugodtan, benne van minden. Ha szimpatikus, jelezz nekem vagy <span class="var">[Ajánló nevének]</span> és találkozunk az irodában.',
+        reactions:[{icon:'✅',text:'"Oké, várom az emailt."',next:'zaras'}]},
+      visszahivas2:{step:4,label:'Visszahívás',
+        you:'Persze! Pontosan felírom és pontosan is hívlak vissza – <span class="hl">mikor a legbiztosabb, hogy elérsz?</span>',
+        tip:'⚠️ Ha visszahívást egyeztetsz: pontosan írd fel és pontosan is hívd vissza!',
+        reactions:[{icon:'📅',text:'"X-kor / X napon jó."',next:'zaras'}]},
+      nem_erdekli:{step:4,label:'Nem érdekli',
+        you:'Megértem teljesen. Hadd kérdezzek valamit gyorsan – <span class="hl">van-e a környezetedben valaki</span>, aki magára ismerne pénzügyi területen?',
+        reactions:[
+          {icon:'👥',text:'"Van valaki, igen!"',next:'ajanlo_zaras'},
+          {icon:'🤷',text:'"Nem jut eszembe senki."',next:'zaras'},
+        ]},
+      ajanlo_zaras:{step:5,label:'Ajánló lezárás ✓',type:'success',
+        you:'Szuper, nagyon köszönöm! Ha megadod a nevét és elérhetőségét, felveszem vele a kapcsolatot – és természetesen <span class="var">[Ajánló nevét]</span> is megkérem, hogy szóljon neki előre.',
+        reactions:[]},
+      idopont:{step:5,label:'Időpont',
+        you:'Szuper! A 11. kerületben van az irodánk – például <span class="hl">kedden 16:00 után</span> találkozhatnánk. Neked az aznap milyen?',
+        reactions:[
+          {icon:'✅',text:'"Kedd jó / más időpont jó!"',next:'zaras'},
+          {icon:'📧',text:'"Inkább az összefoglalót kérem előbb."',next:'email_elobb'},
+        ]},
+      zaras:{step:5,label:'Lezárva ✓',type:'success',
+        you:'Beírtam! Kérek egy <span class="hl-t">Gmail-t</span> és küldöm a visszaigazolót e-mailben és naptár formátumban is. Ha bármi változás jönne közbe, keressük egymást!',
+        tip:'✔ Gmail-t kérj – naptár meghívót küldj!\n✔ Ha visszahívást ígértél: pontosan hívd vissza!',
+        reactions:[]}
+    }
+  },
+
+  'vez-ugyfelkor':{
+    title:'Ügyfélkörből érkezett ajánlás',totalSteps:5,start:'nyito',
+    nodes:{
+      nyito:{step:1,label:'Nyitó',
+        you:'Szia, én <span class="var">[Neved]</span> vagyok és <span class="var">[Jelölt neve]</span>t keresem – jókor hívom, tegeződhetünk akár?',
+        reactions:[
+          {icon:'😊',text:'"Igen, én vagyok – tegeződjünk, jókor!"',next:'intro'},
+          {icon:'⏱️',text:'"Most nem ideális..."',next:'visszahivas'},
+        ]},
+      visszahivas:{step:1,label:'Visszahívás',
+        you:'Persze, visszahívhatlak – mikor a legbiztosabb, hogy elérsz?',
+        reactions:[{icon:'📅',text:'"X-kor érek rá."',next:'intro'}]},
+      intro:{step:2,label:'Bemutatkozás',
+        you:'Azzal kapcsolatban hívlak, hogy van egy közös kapcsolatunk: <span class="var">[Vezető kollégád neve]</span> kollégám – ha minden igaz, együttműködik az egyik közös barátodmal, <span class="var">[Ajánló neve]</span>val.\n\n<span class="var">[Ajánló neve]</span> javasolta, hogy váltsunk néhány szót – hátha találunk közös nevezőt munka kapcsán.',
+        reactions:[
+          {icon:'✅',text:'"Igen, a Zolit/Berit ismerem – mire gondolt?"',next:'pitch'},
+          {icon:'❓',text:'"Mivel kapcsolatban kerestek?"',next:'pitch'},
+        ]},
+      pitch:{step:3,label:'Pitch',
+        you:'Pénzügyi szolgáltatóként dolgozunk és több pozícióba is keresünk új kollégát a 11. kerületi irodánkba – <span class="var">[Ajánló neve]</span> mondta, hogy Te <span class="var">[releváns info a jelöltről]</span>.\n\nNyilván telefonban ismeretlenül nem tennék állásajánlatot – viszont meg szerettem volna kérdezni: <span class="hl">20 percben meghallgatnád</span>, hogy mi az elképzelés és irány?',
+        reactions:[
+          {icon:'✅',text:'"Igen, persze – mikor?"',next:'idopont'},
+          {icon:'📧',text:'"Küldj előbb egy összefoglalót."',next:'email_elobb'},
+          {icon:'📞',text:'"Visszahívhatlak?"',next:'visszahivas2'},
+          {icon:'🙅',text:'"Nem igazán az én világom..."',next:'nem_erdekli'},
+        ]},
+      email_elobb:{step:4,label:'Email előbb',
+        you:'Persze! Elküldöm az összefoglalót – olvasd át, benne van minden. Ha szimpatikus, jelezz nekem vagy <span class="var">[Ajánló nevének]</span> és találkozunk!',
+        reactions:[{icon:'✅',text:'"Oké, várom az emailt."',next:'zaras'}]},
+      visszahivas2:{step:4,label:'Visszahívás',
+        you:'Persze! Pontosan felírom és pontosan is hívlak vissza – mikor a legbiztosabb?',
+        tip:'⚠️ Ha visszahívást egyeztetsz: pontosan írd fel és pontosan hívd vissza!',
+        reactions:[{icon:'📅',text:'"X-kor jó."',next:'zaras'}]},
+      nem_erdekli:{step:4,label:'Nem érdekli',
+        you:'Megértem teljesen. Hadd kérdezzek valamit – <span class="hl">van-e a környezetedben valaki</span>, aki magára ismerne pénzügyi területen?',
+        reactions:[
+          {icon:'👥',text:'"Van valaki, igen!"',next:'ajanlo_zaras'},
+          {icon:'🤷',text:'"Nem jut eszembe senki."',next:'zaras'},
+        ]},
+      ajanlo_zaras:{step:5,label:'Ajánló lezárás ✓',type:'success',
+        you:'Nagyon köszönöm! Ha megadod a nevét és elérhetőségét, felveszem vele a kapcsolatot.',
+        reactions:[]},
+      idopont:{step:4,label:'Időpont',
+        you:'Szuper! Például <span class="hl">kedden 16:00 után</span> találkozhatnánk a 11. kerületi irodánkban. Neked az milyen?',
+        reactions:[
+          {icon:'✅',text:'"Kedd jó!"',next:'zaras'},
+          {icon:'📧',text:'"Inkább az összefoglalót kérem előbb."',next:'email_elobb'},
+        ]},
+      zaras:{step:5,label:'Lezárva ✓',type:'success',
+        you:'Beírtam! Kérek egy <span class="hl-t">Gmail-t</span> és küldöm a visszaigazolót e-mailben és naptár formátumban is. Ha bármi változás jönne közbe, keressük egymást!',
+        tip:'✔ Gmail-t kérj – naptár meghívót küldj!\n✔ Pontosan hívd vissza, ha ígérted!',
+        reactions:[]}
+    }
+  },
+
+  'vez-direkt':{
+    title:'Direkt kontakt – eseményből',totalSteps:5,start:'nyito',
+    nodes:{
+      nyito:{step:1,label:'Nyitó',
+        you:'Szia, én <span class="var">[Neved]</span> vagyok és <span class="var">[Jelölt neve]</span>t keresem – jókor hívlak?',
+        reactions:[
+          {icon:'😊',text:'"Igen, én vagyok – jókor!"',next:'intro'},
+          {icon:'⏱️',text:'"Most nem ideális..."',next:'visszahivas'},
+        ]},
+      visszahivas:{step:1,label:'Visszahívás',
+        you:'Persze, visszahívhatlak – mikor a legbiztosabb, hogy elérsz?',
+        reactions:[{icon:'📅',text:'"X-kor érek rá."',next:'intro'}]},
+      intro:{step:2,label:'Bemutatkozás',
+        you:'Azzal kapcsolatban hívlak, hogy van egy közös kapcsolatunk: <span class="var">[Kolléga neve]</span>. Ha jól tudom, egy rendezvényen / üzletben / eseményen ismerkedtetek meg nemrég.\n\nÉn a 11. kerületi irodánk HR-ese vagyok és azért hívlak, mert <span class="var">[Kolléga neve]</span>ban felmerült a gondolat, hogy találhatunk közös nevezőt munka kapcsán – mondta, hogy csörögjek rád.',
+        reactions:[
+          {icon:'✅',text:'"Igen, arról az eseményről ismerjük egymást."',next:'pitch'},
+          {icon:'❓',text:'"Egyébként Ti mivel foglalkoztok?"',next:'mivel'},
+          {icon:'❓',text:'"Hogyan kerültem szóba?"',next:'hogyan'},
+        ]},
+      mivel:{step:3,label:'Mivel foglalkozunk',
+        you:'Pénzügyi szolgáltatóként dolgozunk és több pozícióba is keresünk új kollégát. <span class="var">[Kolléga neve]</span> mondta, hogy te épp <span class="var">[releváns info]</span> – ezért gondolt rád.',
+        reactions:[{icon:'💬',text:'"Értem, és mi a következő lépés?"',next:'pitch'}]},
+      hogyan:{step:3,label:'Hogyan kerültél szóba',
+        you:'Működik nálunk egy belső ajánlói rendszer – <span class="var">[Kolléga neve]</span> mondta, hogy <span class="var">[releváns info a jelöltről]</span>, és szerinte érdemes lenne megismernünk egymást.',
+        reactions:[{icon:'💬',text:'"Értem, oké."',next:'pitch'}]},
+      pitch:{step:4,label:'Pitch',
+        you:'Pénzügyi szolgáltatóként dolgozunk és több pozícióba is keresünk új kollégát. Nyilván telefonban ismeretlenül nem tennék állásajánlatot – viszont meg szerettem volna kérdezni: <span class="hl">20 percben meghallgatnád</span>, hogy mi az elképzelés és irány?',
+        reactions:[
+          {icon:'✅',text:'"Igen, végülis igen!"',next:'idopont'},
+          {icon:'📧',text:'"Küldj előbb egy összefoglalót."',next:'email_elobb'},
+          {icon:'📞',text:'"Visszahívhatlak?"',next:'visszahivas2'},
+          {icon:'🙅',text:'"Nem igazán az én világom..."',next:'nem_erdekli'},
+        ]},
+      email_elobb:{step:4,label:'Email előbb',
+        you:'Persze! Elküldöm az összefoglalót – olvasd át, benne van minden. Ha szimpatikus, jelezz nekem vagy <span class="var">[Kolléga nevének]</span> és találkozunk!',
+        reactions:[{icon:'✅',text:'"Oké, várom!"',next:'zaras'}]},
+      visszahivas2:{step:4,label:'Visszahívás',
+        you:'Persze! Pontosan felírom és pontosan is hívlak vissza – mikor a legbiztosabb?',
+        tip:'⚠️ Ha visszahívást egyeztetsz: pontosan írd fel és pontosan hívd vissza!',
+        reactions:[{icon:'📅',text:'"X-kor jó."',next:'zaras'}]},
+      nem_erdekli:{step:4,label:'Nem érdekli',
+        you:'Megértem teljesen. Hadd kérdezzek valamit – <span class="hl">van-e a környezetedben valaki</span>, aki magára ismerne pénzügyi területen?',
+        reactions:[
+          {icon:'👥',text:'"Van valaki, igen!"',next:'ajanlo_zaras'},
+          {icon:'🤷',text:'"Nem jut eszembe senki."',next:'zaras'},
+        ]},
+      ajanlo_zaras:{step:5,label:'Ajánló lezárás ✓',type:'success',
+        you:'Nagyon köszönöm! Ha megadod a nevét és elérhetőségét, felveszem vele a kapcsolatot.',
+        reactions:[]},
+      idopont:{step:4,label:'Időpont',
+        you:'Szuper! Például <span class="hl">kedden 16:00 után</span> találkozhatnánk a 11. kerületi irodánkban. Neked az milyen?',
+        reactions:[
+          {icon:'✅',text:'"Kedd jó!"',next:'zaras'},
+          {icon:'📧',text:'"Inkább az összefoglalót kérem előbb."',next:'email_elobb'},
+        ]},
+      zaras:{step:5,label:'Lezárva ✓',type:'success',
+        you:'Beírtam! Kérek egy <span class="hl-t">Gmail-t</span> és küldöm a visszaigazolót e-mailben és naptár formátumban is. Ha bármi változás jönne közbe, keressük egymást!',
+        tip:'✔ Gmail-t kérj – naptár meghívót küldj!\n✔ Pontosan hívd vissza, ha ígérted!',
+        reactions:[]}
+    }
+  },
+
+  'vez-oneletrajz':{
+    title:'Önéletrajz + telefonos előszűrés',totalSteps:7,start:'nyito',
+    nodes:{
+      nyito:{step:1,label:'Nyitó',
+        you:'Szia, én <span class="var">[Neved]</span> vagyok és <span class="var">[Jelölt neve]</span>t keresem – jókor hívom, tegeződhetünk akár?',
+        reactions:[
+          {icon:'😊',text:'"Igen, én vagyok – tegeződjünk, jókor!"',next:'bevezeto'},
+          {icon:'⏱️',text:'"Most nem ideális..."',next:'visszahivas'},
+        ]},
+      visszahivas:{step:1,label:'Visszahívás',
+        you:'Persze, visszahívhatlak – mikor a legbiztosabb, hogy elérsz?',
+        reactions:[{icon:'📅',text:'"X-kor érek rá."',next:'bevezeto'}]},
+      bevezeto:{step:2,label:'Bevezető',
+        you:'Azzal kapcsolatban hívlak, hogy beérkezett hozzánk az önéletrajzod. Előzetes kérdéseket tennék fel és egyeztetnénk egy első körös interjú időpontot, ha megtaláljuk a közös nevezőt. 😊',
+        reactions:[{icon:'✅',text:'"Rendben!"',next:'lep1'}]},
+      lep1:{step:3,label:'1. Motiváció',type:'branch',
+        you:'<span class="hl-t">1. lépés – Motiváció felmérése</span>\n\n"Kérlek, mesélj egy kicsit arról, mi fogott meg a pozíciónkban / hirdetésünkben."\n\nFigyeld: valóban érdeklődik-e, vagy csak tömegesen pályázik mindenhova?',
+        reactions:[
+          {icon:'🎯',text:'Motivált, konkrét választ adott',next:'lep2',class:'branch'},
+          {icon:'🤷',text:'Bizonytalan / általános válasz',next:'lep2',class:'branch'},
+        ]},
+      lep2:{step:4,label:'2. Profil kérdések',type:'branch',
+        you:'<span class="hl-t">2. lépés – Profil és tapasztalat</span>\n\nHa volt munkahelye:\n"Látom, korábban ott és ott dolgoztál – a legutolsó helyről miért jöttél el?"\n\n<em style="color:var(--muted)">Ha még nem dolgozott: ezt hagyd ki!</em>',
+        reactions:[
+          {icon:'💼',text:'Elmondta a tapasztalatait',next:'lep3',class:'branch'},
+          {icon:'🎓',text:'Még nem dolgozott – kérdést kihagytam',next:'lep3',class:'branch'},
+        ]},
+      lep3:{step:5,label:'3. Elköteleződés',type:'branch',
+        you:'<span class="hl-t">3. lépés – Hosszú távú elkötelezettség</span>\n\n"Hogyan illeszkedik ez a pozíció a hosszú távú terveidhez?"\n\nFigyeld: van-e konkrét elképzelése, vagy csak kipróbálna valamit?',
+        reactions:[
+          {icon:'🌟',text:'Motiváltnak tűnik, konkrét tervei vannak',next:'lep4',class:'branch'},
+          {icon:'😐',text:'Bizonytalan / nincs konkrét terv',next:'lep4',class:'branch'},
+        ]},
+      lep4:{step:6,label:'4. Praktikus részletek',type:'branch',
+        you:'<span class="hl-t">4. lépés – Praktikus részletek</span>\n\n• Mikor tud kezdeni?\n• Milyen fizetési igényei vannak?\n• Mennyi ideje van a meglévő tevékenységei mellett?\n  (suli, sport, család, másik munka)',
+        reactions:[
+          {icon:'✅',text:'Részletek rendben, folytatom',next:'lep5',class:'branch'},
+        ]},
+      lep5:{step:7,label:'5. KO kritériumok',type:'branch',
+        you:'<span class="hl-t">5. lépés – KO kritériumok</span>\n\n"Van olyan munkakörülmény, ami biztosan kizáró ok lenne számodra?"\n(pl. bejárás gyakorisága, munkarend, technikai elvárások)\n\n<em style="color:var(--muted)">Ha nincs ilyen – egyeztess interjúidőpontot!</em>',
+        reactions:[
+          {icon:'✅',text:'Nincs KO – szimpi jelölt, egyeztetünk!',next:'zaras_interju',class:'branch'},
+          {icon:'📧',text:'Bizonytalan – inkább összefoglalót küldök',next:'zaras_email',class:'branch'},
+          {icon:'❌',text:'KO kritérium van – nem folytatjuk',next:'zaras_ko',class:'branch'},
+        ]},
+      zaras_interju:{step:7,label:'Interjú lezárva ✓',type:'success',
+        you:'Beírtam az interjút – kérek egy <span class="hl-t">Gmail-t</span> és küldöm a visszaigazolót e-mailben és naptár formátumban is. Ha bármi változás jönne közbe, keressük egymást!',
+        tip:'✔ Gmail-t kérj – naptár meghívót küldj!\n✔ Előszűrési notest tedd el – vezető kollégának átadni!',
+        reactions:[]},
+      zaras_email:{step:7,label:'Email lezárás',type:'success',
+        you:'Köszönöm, hogy ezeket elmondtad! Küldök egy összefoglaló leírást magunkról – ha abból magadra ismersz, foglald le a benne található linken az időpontot. Ha felmerül kérdés, jelezz ezen a számon vagy e-mailben. 😊',
+        reactions:[]},
+      zaras_ko:{step:7,label:'KO lezárás',type:'success',
+        you:'Köszönöm, hogy elmondtad – ez fontos visszajelzés nekünk is. Egyeztetek a kollégákkal a meglévő információk alapján és 1 napon belül telefonon vagy írásban visszajelzek.',
+        tip:'⚠️ KO volt – vezesd le a notest és értesítsd a csapatot!',
+        reactions:[]}
+    }
+  },
+
   'halado-idobizt':{
     title:'Időpontbiztosítás',totalSteps:3,start:'helyszin',
     nodes:{
@@ -737,39 +997,98 @@ const STORIES = {
 // ═══════════════════════════════════════
 const OBJECTIONS = [
   {id:'__OBJ_IDO',icon:'⏱️',label:'Időhiány',items:[
-    {trigger:'"Vezetek, bocsi, mindjárt visszahívlak!"',resp:'Rendben, semmi gond – csak fél percre tartanálak fel! 30 másodperc múlva letesszük. Mikor hívhatlak vissza?'},
-    {trigger:'"Vissza tudnál hívni egy óra múlva?"',resp:'Természetesen! Viszont egy percet rabolok az idődből maximum, és letesszük 😊'},
-    {trigger:'"Annyira be vagyok táblázva..."',resp:'Végre valaki ugyanabban a cipőben van, mint én! Ezért is csak 2 percre csörögtem most.'},
+    {trigger:'"Vezetek, bocsi, mindjárt visszahívlak!"',
+     resp:'Persze, semmi gond! Mikor a legbiztosabb, hogy elérsz – délelőtt vagy délután?'},
+    {trigger:'"Vissza tudnál hívni egy óra múlva?"',
+     resp:'Természetesen, visszahívlak. Mikor a legjobb?'},
+    {trigger:'"Annyira be vagyok táblázva..."',
+     resp:'Megértelek – pont ezért nem akarok sok időt rabolni. Csak egy gyors egyeztetés, hogy mikor lenne jó találkoznunk. Kedd-szerda délután szóba jön?'},
   ]},
   {id:'__OBJ_BIZ',icon:'⚠️',label:'Bizalmatlanság',items:[
-    {trigger:'"Valami átverés, vagy csak nyomják a terméket!"',resp:'Kérlek, ne keverj össze az ügynökökkel és call centeresekkel – nem emiatt kaptam az ajánlást. Független elemzéssel foglalkozom.'},
-    {trigger:'"Nem tudom, mennyire vagy független..."',resp:'Amennyire csak lehet, annyira vagyok független! Fogalmam sincs milyen biztosításaid vannak – nem is ezért hívtalak!'},
-    {trigger:'"A végén mindig fizetnem kell valamiért!"',resp:'Kérlek, ne keverj össze az ügynökökkel – nem emiatt kaptam az ajánlást, hogy valamilyen terméket javasoljak.'},
+    {trigger:'"Valami átverés, vagy csak nyomják a terméket!"',
+     resp:'Teljesen megértem – sok ilyen hívás van sajnos. Én azért kereslek, mert [Ajánló neve] ajánlott. Az első találkozón nem kell semmiben döntened – csak átbeszéljük a lehetőségeidet, és utána eldöntöd, volt-e értelme.'},
+    {trigger:'"Nem tudom, mennyire vagy független..."',
+     resp:'Jogos kérdés. Az a dolgom, hogy megértsd a lehetőségeidet – nem egy adott termék eladása. Az első találkozón semmiről sem kell döntened.'},
+    {trigger:'"A végén mindig fizetnem kell valamiért!"',
+     resp:'Megértelek – rossz tapasztalat sokaknak volt. Az elemzésnek nincs díja, és az első találkozón semmiről sem kell döntened. [Ajánló neve] is így kezdte.'},
   ]},
   {id:'__OBJ_NEM',icon:'🙅',label:'Nem aktuális',items:[
-    {trigger:'"Nekem ez most nem aktuális, majd én kereslek."',resp:'Lehet, hogy félreértettük egymást – én alapvetően nem értékesítéssel foglalkozom, hanem egy kötetlen elemzést készítenénk el. Nem tudtuk előre, hogy melyek lesznek a témák.'},
-    {trigger:'"Már annyi ilyen hívást kaptam..."',resp:'Kérlek, ne keverj össze az ügynökökkel és call centeresekkel – telefonon egyszerűbben fel tudtuk venni a kapcsolatot ajánlásból 😊'},
+    {trigger:'"Nekem ez most nem aktuális, majd én kereslek."',
+     resp:'Megértem. Hadd kérdezzek valamit – mi az, ami most nem ideális? Az elemzés nem arról szól, hogy valamit azonnal változtassunk. Lehet, hogy csak megerősítjük, hogy minden rendben van nálad.'},
+    {trigger:'"Már annyi ilyen hívást kaptam..."',
+     resp:'Sajnálom, hogy ennyi ilyen hívást kaptál. Én azért kereslek, mert [Ajánló neve] ajánlott – nem egy lista alapján. Ha 30 perc után úgy érzed, nem volt haszna, teljesen megértem.'},
   ]},
   {id:'__OBJ_MAG',icon:'🔒',label:'Magánélet',items:[
-    {trigger:'"Nem szeretek ilyenekről beszélni, kényelmetlen."',resp:'100%-ban egyetértek! Sőt, az a hivatásom, hogy az olyan emberek ne tudjanak érvényesülni, akik kártékonyak az emberek pénzügyeire.'},
-    {trigger:'"Nem szoktam ismeretlenekkel telefonon pénzügyekről."',resp:'Ezért nem is szeretnék telefonban részletezni – az ajánlóval sem telefonban beszéltem, pedig őt már régóta ismerem.'},
+    {trigger:'"Nem szeretek ilyenekről beszélni, kényelmetlen."',
+     resp:'Teljesen megértem, ez sokaknak érzékeny téma. Nem a konkrét számok érdekelnének – inkább az, hogy látod-e, mire számíthatsz a jövőben. Nem kell megosztanod semmi olyat, amit nem szeretnél.'},
+    {trigger:'"Nem szoktam ismeretlenekkel telefonon pénzügyekről."',
+     resp:'Pont ezért nem telefonon szoktam ezeket megbeszélni – ez csak egy egyeztetés, hogy mikor találkozhatnánk. [Ajánló neve] is így kezdtük.'},
   ]},
   {id:'__OBJ_TAP',icon:'📉',label:'Rossz tapasztalat',items:[
-    {trigger:'"Semmi újat nem mondtak, időpocsékolásnak éreztem."',resp:'Köszönöm, hogy megosztottad – de ez nekem egy picit rosszul esik, mert az ajánlód pont az ellenkezőjét mondta!'},
-    {trigger:'"Mindig megígértek valamit, aztán én jövök ki rosszul!"',resp:'Meg engedsz egy illetlen kérdést? Ugye nem az első szembejövő emberrel házasodtál össze? A legjobb lehetőség sem jön mindig elsőre. Én a saját munkámért vállalok felelősséget.'},
+    {trigger:'"Semmi újat nem mondtak, időpocsékolásnak éreztem."',
+     resp:'Ezt hallani fáj – megkérdezhetem, mi hiányzott belőle? Ha tudom, mit nem kaptál meg máshol, arra tudok fókuszálni.'},
+    {trigger:'"Mindig megígértek valamit, aztán én jövök ki rosszul!"',
+     resp:'Jogos. Én nem ígérek semmit előre – találkozzunk, és utána eldöntöd, volt-e értelme. Ha nem volt, mondd meg bátran.'},
   ]},
   {id:'__OBJ_HIT',icon:'🏦',label:'Hitelesség',items:[
-    {trigger:'"Neked ebből mi a hasznod?"',resp:'Az ajánlód azt javasolta, hogy egy ugyanolyan elemzés erejéig vegyük fel a kapcsolatot. MNB szabály alapján egy fizetési keretrendszerben vannak a független tanácsadók – leginkább a pályázatírók munkájára hasonlít.'},
-    {trigger:'"Aki pénzügyi tanácsot ad, annak 3 lakása legyen!"',resp:'Nincs – de álljunk meg! Pénzügyi szolgáltatási tanácsadó vagyok, de ne keverj össze a Wall Street farkasaival! 😄'},
+    {trigger:'"Neked ebből mi a hasznod?"',
+     resp:'Jogos kérdés. Ha a végén úgy döntöd, hogy szeretnél velem dolgozni, akkor van belőle bevételem. De az első találkozó erről még nem szól – ott csak megismerjük egymást és átnézzük a lehetőségeidet.'},
+    {trigger:'"Aki pénzügyi tanácsot ad, annak 3 lakása legyen!"',
+     resp:'Értem a logikát 😄 Nem azt kérem, hogy vakon bízzál meg – kérj referenciát [Ajánló nevétől], ő el tudja mondani, mi haszna volt az elemzésből.'},
   ]},
   {id:'__OBJ_MAK',icon:'😤',label:'Makacs / öntelt',items:[
-    {trigger:'"Tudom, hogy ez csak eladási szöveg..."',resp:'Mire gondolsz pontosan? Fontos: nem egy eladó vagyok, hanem független pénzügyi elemző.'},
-    {trigger:'"Rám szeretnél sózni valamit?"',resp:'Határozottan nem! Engedd meg, hogy szakmailag és emberileg is egy jó referenciával kapcsolatban hívtalak.'},
-    {trigger:'"Miért kellene pont rád hallgatnom?"',resp:'Kérlek, engedd meg, hogy ezt bebizonyítsam – rendelkezem minden fontos szakmai referenciával 😊'},
+    {trigger:'"Tudom, hogy ez csak eladási szöveg..."',
+     resp:'Ha az lennék, már rég eladtam volna valamit 😄 Hadd kérdezzek valamit – mi kellene ahhoz, hogy megérje neked 45 percet szánni erre?'},
+    {trigger:'"Rám szeretnél sózni valamit?"',
+     resp:'Nem, és ezt telefonon nem is tudnám. Az első találkozón semmiről sem döntünk – [Ajánló neve] is így kezdte, megkérdezheted tőle.'},
+    {trigger:'"Miért kellene pont rád hallgatnom?"',
+     resp:'Nem kellene – azt kérem, hogy hallgass meg, és utána eldöntöd. [Ajánló neve] azt mondta, érdemes találkoznod velem. Ha téved, biztosan szólni fogsz neki 😊'},
+  ]},
+  {id:'__OBJ_TANAR',icon:'🤝',label:'Van tanácsadóm',items:[
+    {trigger:'"Van már valakink aki intézi a pénzügyeinket."',
+     resp:'Örülök, hogy foglalkoznak ezzel – ez ritkaság! Melyik területen dolgozik a tanácsadójuk? ... A tapasztalatom az, hogy a legtöbb embernek van valaki egy-egy területre, de a teljes kép – megtakarítás, biztosítás, befektetés, állami támogatások – ritkán van összerakva. 20 perc alatt megnézzük – ha minden rendben van, csak megerősítést kapnak.'},
+    {trigger:'"Egy ismerősöm / barátom / sógorom foglalkozik ilyennel."',
+     resp:'Megértem, és ez kényes terület – nem az a cél, hogy bárkit leváltsatok. Amit kínálok, az egy független, külső szemszög. Sokan mondják utólag, hogy ez volt a legjobb döntés: nem változtattak semmit, csak biztosabbak lettek benne. Megér 20 percet?'},
+    {trigger:'"Meg vagyok elégedve a jelenlegi tanácsadómmal."',
+     resp:'Ez a legjobb kiindulópont! Ha meg van elégedve, akkor könnyű a találkozó: nincs nyomás, nincs eladás, csak egy friss, független áttekintés. Ha minden stimmel, ennyi volt. Ha valami hiányzik, azt is megmutatom.'},
+  ]},
+  {id:'__OBJ_PENZ',icon:'💸',label:'Nincs pénzem',items:[
+    {trigger:'"Nincs erre pénzünk most."',
+     resp:'Teljesen megértem – pontosan emiatt érdemes találkoznunk. A tanácsadás ingyenes, és a legtöbb embernek nem több pénz kell, hanem jobb elosztás. 20 perc alatt megmutatom, hogy a jelenlegi helyzetből mire van lehetőség – kötelezettség nélkül.'},
+    {trigger:'"Nem tudunk most ilyenre költeni."',
+     resp:'Nem is kell! A feladatom az, hogy megmutassam: a meglévő kiadásaitokból hogyan lehet okosabbat kihozni. Ez nem plusz kiadás – ez optimalizálás. Mikor találkozunk egy rövid egyeztetésre?'},
+    {trigger:'"Nagyon szűk a keret most."',
+     resp:'Megértem. Pont az ilyen időszakban a leghasznosabb egy külső szem – mert sokszor nem a keret szűk, hanem az elosztás nem optimális. Ez derül ki 20 perc alatt, teljesen ingyen.'},
+  ]},
+  {id:'__OBJ_EGYEM',icon:'🙋',label:'Egyedül intézem',items:[
+    {trigger:'"Én magam intézem a pénzügyeimet."',
+     resp:'Szuper, ez ritkaság! Mennyi időt tölt ezzel havonta? ... Megmutatom, hogy ugyanezt hogyan lehet feleannyi idő alatt és kisebb kockázattal csinálni – mi látjuk az összes szolgáltató ajánlatát egyszerre, így jobb összehasonlítást tudok adni.'},
+    {trigger:'"Nem szeretem, ha más beleszól a pénzügyeimbe."',
+     resp:'Ezt nagyon jól értem – és pontosan ez nem fog történni. Az én szerepem az, hogy információt adjak, nem hogy döntést hozzak helyetted. Minden döntés a tiéd marad – én csak megmutatom a teljes képet, amit egyedül nehezebb látni.'},
+    {trigger:'"Megtalálom az infót az interneten is."',
+     resp:'Igen, ott is van sok minden – de az általános infó nem veszi figyelembe a te konkrét helyzeteidet, bevételeidet, terveidet. Pont ez a különbség. 20 perc alatt megmutatom, mit látok a te adataid alapján, amit egy Google-keresés nem tud megmutatni.'},
+  ]},
+  {id:'__OBJ_TELEF',icon:'📞',label:'Mondja el telefonon',items:[
+    {trigger:'"Mondja el röviden, miről van szó."',
+     resp:'Szívesen adok egy rövid képet – pénzügyi tervezésről van szó. De amit telefonban mondanék, az általános lenne, és félrevezető is lehetne. A lényeg az, hogy személyre szabott – 20 perc alatt megmutatom, ami pont neked releváns.'},
+    {trigger:'"Legalább annyit mondjon, hogy érdemes-e."',
+     resp:'Azt tudom mondani: ha van fix kiadásod, megtakarításod, vagy tervezel valamit a következő 5 évben – akkor biztosan lesz benne valami hasznos. De hogy pontosan mi, azt csak személyesen tudom megmutatni. Mikor találkozunk?'},
+    {trigger:'"Nem megyek sehova, amíg nem tudom miről van szó."',
+     resp:'Megértem – én is ugyanezt tenném. Röviden: pénzügyi optimalizálásról van szó – megtakarítás, biztosítás, befektetés, vagy ezek kombinációja. A konkrét ajánlás pedig mindig a te helyzetedhez igazodik, ezt csak személyesen tudom megmutatni érdemben. 20 perc, és pontosan fogod tudni, van-e értelme folytatni.'},
+  ]},
+  {id:'__OBJ_ELAD',icon:'🏷️',label:'El akar adni valamit?',items:[
+    {trigger:'"El akar adni valamit?"',
+     resp:'Igen – de nem úgy, ahogy gondolod. Nem konkrét terméket ajánlok, hanem azt nézem meg, hogy a jelenlegi helyzetedhez képest mi lenne az optimális. Ha minden rendben van, azt is megmondom. Ha valami hiányzik, akkor mutatom az opciót – dönteni te döntesz.'},
+    {trigger:'"Biztosítást árul, ugye?"',
+     resp:'Foglalkozunk biztosításokkal is – de az a legkisebb szelet. Befektetés, megtakarítás, adóoptimalizálás, állami támogatások visszaigénylése – ezek mind a képbe tartoznak. A találkozón megmutatom a teljes képet, nem csak egy terméket.'},
+    {trigger:'"Nem akarok semmit venni."',
+     resp:'Nem is kell! A találkozó ingyenes és kötelezettségmentes. Én információt adok – dönteni csak te döntesz, és csak akkor, ha akarsz. Ha nem veszel semmit, az is teljesen rendben van. Szóval mikor találkozzunk?'},
   ]},
   {id:'__OBJ_DOM',icon:'👑',label:'Dominancia',items:[
-    {trigger:'"Velem nem annyira egyszerű időpontot egyeztetni..."',resp:'Végre valaki ugyanabban a cipőben van, mint én! 😄'},
-    {trigger:'"Általában én szoktam vezetni a beszélgetést..."',resp:'Nyitott vagyok mindenféle kompromisszumra 😊'},
+    {trigger:'"Velem nem annyira egyszerű időpontot egyeztetni..."',
+     resp:'Tudom, pont ezért kérdezem előre – mikor szokott jobb lenni? Inkább reggel, vagy délután valahol?'},
+    {trigger:'"Általában én szoktam vezetni a beszélgetést..."',
+     resp:'Akkor tökéletes páros leszünk 😊 Mikor találkoznánk?'},
   ]},
 ];
 const OBJ_MAP = {};
@@ -791,6 +1110,12 @@ const CALL_TYPES = {
     {id:'halado-tanacsadas',icon:'📅',name:'Tanácsadás egyeztetés',sub:'Ha nem az elemzésen egyeztettük'},
     {id:'halado-ajker',icon:'📣',name:'Ajánláskérés',sub:'Saját ügyféltől / Munkatárson át'},
     {id:'halado-idobizt',icon:'🔔',name:'Időpontbiztosítás',sub:'Emlékeztető hívás sablonok'},
+  ],
+  vezeto:[
+    {id:'vez-munkatarsi',icon:'👥',name:'Munkatársi ajánlás',sub:'HR füzet – belső hálózatból'},
+    {id:'vez-ugyfelkor',icon:'💼',name:'Ügyfélkörből ajánlás',sub:'Ügyfél adta a nevet'},
+    {id:'vez-direkt',icon:'🎯',name:'Direkt kontakt',sub:'Esemény / személyes találkozás'},
+    {id:'vez-oneletrajz',icon:'📋',name:'Önéletrajz + előszűrés',sub:'CV-s jelentkező – 5 lépéses módszer'},
   ]
 };
 
@@ -884,7 +1209,7 @@ function restartFlow(){
 // ═══════════════════════════════════════
 function renderCallTypes(){
   const types=CALL_TYPES[currentMode];
-  document.getElementById('ct-title').textContent=currentMode==='atom'?'🌱 KEZDŐ MUNKATÁRS':'🎯 HALADÓ';
+  document.getElementById('ct-title').textContent=currentMode==='atom'?'🌱 KEZDŐ MUNKATÁRS':currentMode==='halado'?'🎯 HALADÓ':'📋 VEZETŐI MODUL';
   const list=document.getElementById('ct-list');
   list.innerHTML='<div class="slabel">Válassz call típust</div>';
   types.forEach(t=>{
