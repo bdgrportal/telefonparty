@@ -592,6 +592,11 @@ html,body{
       <div class="mc-title" style="color:#f7c948">VERSENY MÓD</div>
       <div class="mc-desc">Solo cél · 2–4 fős verseny · Konfetti · CSV export</div>
     </div>
+    <div class="mode-card" style="border-color:rgba(91,108,255,.5);cursor:pointer" onclick="pOpenHall()">
+      <div class="mc-icon">🏅</div>
+      <div class="mc-title" style="color:#8b9bff">DICSŐSÉGFAL</div>
+      <div class="mc-desc">Lezajlott meccsek · örökranglista · utóbbi 12 hét</div>
+    </div>
   </div>
 </div>
 
@@ -2337,6 +2342,7 @@ function installPWA(){
 <div class="screen" id="net-invite" style="flex-direction:column;height:100dvh">
   <div class="hdr"><button class="btn-back" onclick="showScreen('comp-screen')">← Vissza</button><div class="hdr-info"><div class="hdr-title">🌐 Kiket hívsz meg?</div></div></div>
   <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px">
+    <input class="comp-player-input" id="net-match-name" placeholder="Meccs neve (opcionális, pl. Csütörtöki csata)" maxlength="40" style="margin-bottom:2px">
     <div style="font-size:12px;color:var(--muted)">Válaszd ki a csapattagokat — értesítést kapnak a portálon, hogy csatlakozzanak.</div>
     <div id="net-invite-list" style="display:flex;flex-direction:column;gap:8px"></div>
   </div>
@@ -2368,7 +2374,19 @@ function installPWA(){
 <div class="screen" id="net-results" style="flex-direction:column;height:100dvh">
   <div class="hdr"><div class="hdr-info"><div class="hdr-title">🏆 Végeredmény</div></div></div>
   <div class="comp-result-body" id="net-result-body"></div>
-  <div class="comp-footer"><button class="comp-foot-btn" onclick="pLeave()">🏠 Főoldal</button></div>
+  <div class="comp-footer"><button class="comp-foot-btn" onclick="pOpenHall()">🏅 Dicsőségfal</button><button class="comp-foot-btn" onclick="pLeave()">🏠 Főoldal</button></div>
+</div>
+
+<!-- ══════════ DICSŐSÉGFAL — lezajlott meccsek + örökranglista ══════════ -->
+<div class="screen" id="hall" style="flex-direction:column;height:100dvh">
+  <div class="hdr"><button class="btn-back" onclick="showScreen('home')">← Vissza</button><div class="hdr-info"><div class="hdr-title">🏅 Dicsőségfal</div></div></div>
+  <div style="flex-shrink:0;padding:10px 14px;display:flex;gap:7px;border-bottom:1px solid var(--border)">
+    <button class="comp-time-opt active" id="hall-f-12w" onclick="pHallSetFilter('12w')">Utóbbi 12 hét</button>
+    <button class="comp-time-opt" id="hall-f-all" onclick="pHallSetFilter('all')">All time</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px" id="hall-body">
+    <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Betöltés…</div>
+  </div>
 </div>
 
 <!-- ══ CÉLALAPÍTÁS OVERLAY (solo, hívás közben) ══ -->
@@ -2423,8 +2441,10 @@ function installPWA(){
 /* ══════════ ONLINE VERSENY MODUL — Supabase realtime szobák ══════════ */
 const P_URL='https://spczsywkyblwhkutltxx.supabase.co';
 const P_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3pzeXdreWJsd2hrdXRsdHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MTU5NDksImV4cCI6MjA5ODQ5MTk0OX0.npj-z1dCkdE0xdf2pJx40oxe20zwTq5xu-V96NbB4Og';
-let PSB=null, pMe=null, pRoomId=null, pRoom=null, pMembers=[], pChan=null, pTimer=null, pTeam=[], pPlan={}, pTime=30;
+let PSB=null, pMe=null, pRoomId=null, pRoom=null, pMembers=[], pChan=null, pTimer=null, pTeam=[], pPlan={}, pTime=30, pMatchName='', pMatchSaved=false, pHallFilter='12w';
 const P_PORTAL='https://bdgrportal.github.io/gentischerportal/';
+function pSizeCat(n){ if(n<=2) return {key:'1v1',lbl:'1 v 1',emoji:'⚔️'}; if(n<=4) return {key:'arena',lbl:'Mini aréna (3–4 fő)',emoji:'🛡️'}; if(n<=7) return {key:'verseny5',lbl:'Verseny (5–7 fő)',emoji:'🏆'}; return {key:'csoport10',lbl:'Nagy csoport (8+ fő)',emoji:'👥'}; }
+var PSIZE_ORDER=[['1v1','⚔️ 1 v 1'],['arena','🛡️ Mini aréna'],['verseny5','🏆 5-ös verseny'],['csoport10','👥 Nagy csoport']];
 
 // A portál access-tokenjének kiolvasása a KÖZÖS localStorage-ból (azonos origin).
 // Statikus Bearer-fejlécként adjuk a kliensnek → minden hívás HITELESÍTVE megy (nem anonként),
@@ -2489,6 +2509,7 @@ async function pRenderInvite(){
 async function pCreateRoom(){
   var picks=[].slice.call(document.querySelectorAll('.p-inv:checked')).map(function(c){return {email:c.value,name:c.getAttribute('data-name')};});
   if(!picks.length){ alert('Válassz legalább 1 csapattagot!'); return; }
+  var mn=document.getElementById('net-match-name'); pMatchName=(mn&&mn.value||'').trim(); pMatchSaved=false;
   var btn=document.getElementById('net-send-btn'); if(btn){btn.disabled=true;btn.textContent='Küldés…';}
   // friss token a localStorage-ból (a portál tartja karban) → a hívás HITELESÍTVE megy
   if(!pApplyAuth()){ alert('Nem talállak bejelentkezve ebben a böngészőben.\nNyisd meg a portált UGYANEBBEN a böngészőben, lépj be, majd térj vissza ide és frissíts.'); if(btn){btn.disabled=false;btn.textContent='📨 Meghívók küldése & Lobby';} return; }
@@ -2617,6 +2638,64 @@ function pEndPlay(){
     }).join('')+'</div>';
   var body=document.getElementById('net-result-body'); if(body) body.innerHTML=html;
   if(typeof launchConfetti==='function'){ launchConfetti(); setTimeout(launchConfetti,500); }
+  pSaveMatch(); // meccs mentése a Dicsőségfalra (csak a host, egyszer)
+}
+// A meccs elmentése a party_matches táblába — CSAK a host, és csak egyszer
+async function pSaveMatch(){
+  if(pMatchSaved || !_pIsHost() || !PSB) return;
+  var players=pMembers.slice().filter(function(m){return m.status!=='declined'&&m.status!=='invited';}).sort(function(a,b){return (b.score||0)-(a.score||0);});
+  if(players.length<2) return;
+  pMatchSaved=true;
+  var win=players[0], sc=pSizeCat(players.length);
+  var rec={ name:pMatchName||null, size_cat:sc.key, player_count:players.length,
+    host_email:(pMe&&pMe.email)||null, host_name:(pMe&&pMe.name)||null, plan:(pRoom&&pRoom.plan)||{},
+    winner_email:win.user_email, winner_name:win.display_name||win.user_email, winner_score:win.score||0,
+    results:players.map(function(m){return {email:m.user_email,name:m.display_name||m.user_email,score:m.score||0,tallies:m.tallies||{}};}),
+    played_at:new Date().toISOString() };
+  try{ await PSB.from('party_matches').insert(rec); }catch(e){ pMatchSaved=false; }
+}
+
+/* ── DICSŐSÉGFAL ── */
+function pHallSetFilter(f){ pHallFilter=f; document.getElementById('hall-f-12w').classList.toggle('active',f==='12w'); document.getElementById('hall-f-all').classList.toggle('active',f==='all'); pRenderHall(); }
+function pOpenHall(){
+  showScreen('hall');
+  document.getElementById('hall-f-12w').classList.toggle('active',pHallFilter==='12w');
+  document.getElementById('hall-f-all').classList.toggle('active',pHallFilter==='all');
+  pRenderHall();
+}
+function pHallDate(iso){ try{ var d=new Date(iso); return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0'); }catch(e){ return ''; } }
+async function pRenderHall(){
+  var box=document.getElementById('hall-body'); if(!box) return;
+  if(typeof supabase==='undefined' || !PSB){ box.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Az online adatok nem elérhetők (nincs kapcsolat).</div>'; return; }
+  box.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Betöltés…</div>';
+  var q=PSB.from('party_matches').select('*').order('played_at',{ascending:false});
+  if(pHallFilter==='12w'){ var since=new Date(Date.now()-12*7*86400000).toISOString(); q=q.gte('played_at',since); }
+  var data=[]; try{ var r=await q; data=r.data||[]; }catch(e){}
+  if(!data.length){ box.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px">Még nincs elmentett meccs.<br>Játszatok egy online versenyt — a végén automatikusan ide kerül! 🏅</div>'; return; }
+  // Kategória-számlálók
+  var byCat={}; data.forEach(function(m){ byCat[m.size_cat]=(byCat[m.size_cat]||0)+1; });
+  var catTiles=PSIZE_ORDER.map(function(o){
+    return '<div style="flex:1;min-width:70px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:11px;padding:10px 8px;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--teal)">'+(byCat[o[0]]||0)+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px;line-height:1.25">'+o[1]+'</div></div>';
+  }).join('');
+  var head='<div><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">📊 Lezajlott meccsek — összesen '+data.length+'</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+catTiles+'</div></div>';
+  // Örökranglista (a szűrt időszakra): győzelmek + összpont
+  var agg={};
+  data.forEach(function(m){ (m.results||[]).forEach(function(p){ var k=(p.email||p.name||'').toLowerCase(); if(!k) return; var a=agg[k]||{name:p.name||p.email,wins:0,pts:0,games:0}; a.pts+=(p.score||0); a.games++; a.name=p.name||a.name; agg[k]=a; });
+    var wk=(m.winner_email||m.winner_name||'').toLowerCase(); if(wk&&agg[wk]) agg[wk].wins++; });
+  var board=Object.keys(agg).map(function(k){return agg[k];}).sort(function(a,b){ return (b.wins-a.wins)||(b.pts-a.pts); });
+  var ranks=['🥇','🥈','🥉'];
+  var lbHtml='<div><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">👑 Örökranglista '+(pHallFilter==='12w'?'(12 hét)':'(all time)')+'</div>'
+    +board.slice(0,15).map(function(p,i){ return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)"><div style="font-size:17px;width:26px">'+(ranks[i]||('#'+(i+1)))+'</div><div style="flex:1"><div style="font-size:14px;font-weight:'+(i<3?'800':'600')+'">'+p.name+'</div><div style="font-size:11px;color:var(--muted)">'+p.games+' meccs · '+p.pts+' össz.pont</div></div><div style="text-align:right"><div style="font-size:19px;font-weight:900;color:#f7c948">'+p.wins+' 🏆</div></div></div>'; }).join('')+'</div>';
+  // Meccs-lista
+  var listHtml='<div><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">🗓️ Meccsek</div>'
+    +data.map(function(m){ var sc=pSizeCat(m.player_count||0);
+      return '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:11px;padding:11px 13px;margin-bottom:8px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:14px;font-weight:700">'+(m.name?m.name:sc.lbl)+'</span><span style="font-size:11px;color:var(--muted)">'+pHallDate(m.played_at)+'</span></div>'
+        +'<div style="font-size:11px;color:var(--muted);margin:3px 0 6px">'+sc.emoji+' '+sc.lbl+' · '+(m.player_count||0)+' fő</div>'
+        +'<div style="display:flex;align-items:center;gap:7px;font-size:13px"><span style="color:#f7c948;font-weight:800">🏆 '+(m.winner_name||'?')+'</span><span style="color:var(--teal);font-weight:800">'+(m.winner_score||0)+' pt</span></div>'
+      +'</div>';
+    }).join('')+'</div>';
+  box.innerHTML=head+lbHtml+listHtml;
 }
 function pLeave(){
   if(pTimer){ clearInterval(pTimer); pTimer=null; }
