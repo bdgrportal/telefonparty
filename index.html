@@ -2426,21 +2426,42 @@ const P_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 let PSB=null, pMe=null, pRoomId=null, pRoom=null, pMembers=[], pChan=null, pTimer=null, pTeam=[], pPlan={}, pTime=30;
 const P_PORTAL='https://bdgrportal.github.io/gentischerportal/';
 
+// A portál access-tokenjének kiolvasása a KÖZÖS localStorage-ból (azonos origin).
+// Statikus Bearer-fejlécként adjuk a kliensnek → minden hívás HITELESÍTVE megy (nem anonként),
+// az auth-gépezet (session-recovery / cross-tab refresh) megkerülésével.
+function pReadToken(){
+  try{
+    var base='sb-spczsywkyblwhkutltxx-auth-token';
+    var raw=localStorage.getItem(base);
+    if(!raw){ var parts=[]; for(var i=0;i<12;i++){ var c=localStorage.getItem(base+'.'+i); if(c) parts.push(c); else break; } if(parts.length) raw=parts.join(''); }
+    // Tartalék: bármelyik sb-...-auth-token kulcs (ha a projekt-ref eltérne)
+    if(!raw){ try{ for(var k=0;k<localStorage.length;k++){ var key=localStorage.key(k); if(key && /^sb-.*-auth-token(\.\d+)?$/.test(key)){ var v=localStorage.getItem(key); if(v && v.indexOf('access_token')>=0){ raw=v; break; } } } }catch(e){} }
+    if(!raw) return {};
+    var j=JSON.parse(raw); var ses=j.currentSession||j;
+    return { tok:ses.access_token||null, email:(ses.user&&ses.user.email)||null, refresh:ses.refresh_token||null };
+  }catch(e){ return {}; }
+}
+let pTok=null;
+function pApplyAuth(){
+  var s=pReadToken(); if(!s.tok) return false;
+  pTok=s.tok;
+  try{ if(PSB && PSB.rest && PSB.rest.headers) PSB.rest.headers['Authorization']='Bearer '+pTok; }catch(e){}
+  try{ if(PSB && PSB.realtime && PSB.realtime.setAuth) PSB.realtime.setAuth(pTok); }catch(e){}
+  return true;
+}
 async function pInit(){
   if(typeof supabase==='undefined'){ return; }
+  var s=pReadToken();
   try{
-    PSB=supabase.createClient(P_URL,P_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:'sb-spczsywkyblwhkutltxx-auth-token',lock:function(n,t,fn){return fn();}}});
-    // FONTOS: a portál sessionjét be kell tölteni a KLIENS MEMÓRIÁJÁBA, különben a REST-hívások
-    // anonként mennek ki (→ RLS-hiba). getSession helyreállít a localStorage-ból, setSession rögzíti.
-    var sg=await PSB.auth.getSession();
-    var sess=sg&&sg.data&&sg.data.session;
-    if(sess&&sess.access_token){ try{ await PSB.auth.setSession({access_token:sess.access_token, refresh_token:sess.refresh_token}); }catch(e){} }
-    var u=await PSB.auth.getUser();
-    var au=(u&&u.data&&u.data.user) ? u.data.user : (sess&&sess.user) || null;
-    if(au && au.email){
-      var em=au.email; var nm=em;
-      try{ var pr=await PSB.from('profiles').select('name').eq('email',em).maybeSingle(); if(pr.data&&pr.data.name) nm=pr.data.name; }catch(e){}
-      pMe={email:em,name:nm};
+    var opts={auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}};
+    if(s.tok){ opts.global={headers:{Authorization:'Bearer '+s.tok}}; }
+    PSB=supabase.createClient(P_URL,P_KEY,opts);
+    pTok=s.tok||null;
+    if(pTok){ try{ if(PSB.realtime&&PSB.realtime.setAuth) PSB.realtime.setAuth(pTok); }catch(e){} }
+    if(s.email){
+      var nm=s.email;
+      try{ var pr=await PSB.from('profiles').select('name').eq('email',s.email).maybeSingle(); if(pr.data&&pr.data.name) nm=pr.data.name; }catch(e){}
+      pMe={email:s.email,name:nm};
     }
   }catch(e){ PSB=null; }
   // Deep-link: ?room=<id> → automatikus csatlakozás (meghívóból érkezik)
@@ -2469,11 +2490,8 @@ async function pCreateRoom(){
   var picks=[].slice.call(document.querySelectorAll('.p-inv:checked')).map(function(c){return {email:c.value,name:c.getAttribute('data-name')};});
   if(!picks.length){ alert('Válassz legalább 1 csapattagot!'); return; }
   var btn=document.getElementById('net-send-btn'); if(btn){btn.disabled=true;btn.textContent='Küldés…';}
-  // biztosítjuk, hogy a hívás HITELESÍTVE menjen (a portál sessionjével), ne anonként
-  try{ var sg=await PSB.auth.getSession(); var s=sg&&sg.data&&sg.data.session;
-    if(!s||!s.access_token){ alert('Nem vagy bejelentkezve ebben a böngészőben.\nNyisd meg a portált ugyanebben a böngészőben, lépj be, majd térj vissza ide.'); if(btn){btn.disabled=false;btn.textContent='📨 Meghívók küldése & Lobby';} return; }
-    if(pMe && s.user && s.user.email) pMe.email=s.user.email;
-  }catch(e){}
+  // friss token a localStorage-ból (a portál tartja karban) → a hívás HITELESÍTVE megy
+  if(!pApplyAuth()){ alert('Nem talállak bejelentkezve ebben a böngészőben.\nNyisd meg a portált UGYANEBBEN a böngészőben, lépj be, majd térj vissza ide és frissíts.'); if(btn){btn.disabled=false;btn.textContent='📨 Meghívók küldése & Lobby';} return; }
   try{
     var ins=await PSB.from('party_rooms').insert({host_email:pMe.email,host_name:pMe.name,plan:pPlan,points:CAT_POINTS,time_limit:pTime,status:'lobby'}).select().single();
     if(ins.error) throw ins.error;
@@ -2489,6 +2507,7 @@ async function pCreateRoom(){
   }
 }
 async function pJoinRoom(rid){
+  pApplyAuth();
   try{
     var ex=await PSB.from('party_members').select('id,status').eq('room_id',rid).eq('user_email',pMe.email).maybeSingle();
     if(ex.data){ if(ex.data.status!=='joined') await PSB.from('party_members').update({status:'joined'}).eq('id',ex.data.id); }
@@ -2504,6 +2523,7 @@ async function pRefresh(){
 }
 function pSubscribe(rid){
   if(pChan){ try{PSB.removeChannel(pChan);}catch(e){} pChan=null; }
+  try{ if(pTok && PSB.realtime && PSB.realtime.setAuth) PSB.realtime.setAuth(pTok); }catch(e){}
   try{
     pChan=PSB.channel('party-'+rid)
       .on('postgres_changes',{event:'*',schema:'public',table:'party_members',filter:'room_id=eq.'+rid},pOnChange)
