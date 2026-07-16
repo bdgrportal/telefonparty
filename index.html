@@ -659,6 +659,9 @@ html,body{
   </div>
 </div>
 
+<!-- Online verseny — közös Supabase projekt a portállal -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 // ═══════════════════════════════════════
 // STORY DATA
@@ -2282,6 +2285,8 @@ function installPWA(){
       </div>
 
       <button class="comp-start-btn" onclick="startCompSession()">🚀 Indítás!</button>
+      <button class="comp-start-btn" style="background:linear-gradient(135deg,#5b6cff,#3b82f6);margin-top:2px" onclick="pOpenSetup()">🌐 Online verseny — csapattal, élőben</button>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:-2px">A fenti terv + időkorlát alapján hívsz meg csapattagokat — mindenki a saját telefonján játszik, élő eredménytáblával.</div>
     </div>
   </div>
 
@@ -2326,6 +2331,44 @@ function installPWA(){
     </div>
   </div>
 
+</div>
+
+<!-- ══════════ ONLINE VERSENY (szoba + lobby + élő tábla) ══════════ -->
+<div class="screen" id="net-invite" style="flex-direction:column;height:100dvh">
+  <div class="hdr"><button class="btn-back" onclick="showScreen('comp-screen')">← Vissza</button><div class="hdr-info"><div class="hdr-title">🌐 Kiket hívsz meg?</div></div></div>
+  <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:12px;color:var(--muted)">Válaszd ki a csapattagokat — értesítést kapnak a portálon, hogy csatlakozzanak.</div>
+    <div id="net-invite-list" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+  <div style="padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0">
+    <button class="comp-start-btn" id="net-send-btn" onclick="pCreateRoom()">📨 Meghívók küldése & Lobby</button>
+  </div>
+</div>
+
+<div class="screen" id="net-lobby" style="flex-direction:column;height:100dvh">
+  <div class="hdr"><button class="btn-back" onclick="pLeave()">← Kilépés</button><div class="hdr-info"><div class="hdr-title">🏟️ Lobby</div></div></div>
+  <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px">
+    <div id="net-lobby-info" style="background:rgba(91,191,194,.08);border:1px solid rgba(91,191,194,.25);border-radius:12px;padding:12px 14px;font-size:13px"></div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Játékosok</div>
+    <div id="net-lobby-players" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+  <div style="padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0" id="net-lobby-foot"></div>
+</div>
+
+<div class="screen" id="net-play" style="flex-direction:column;height:100dvh">
+  <div class="comp-hdr">
+    <div style="font-size:11px;font-weight:700;color:var(--muted)">🌐 ONLINE VERSENY</div>
+    <div class="comp-timer-display" id="net-timer">–</div>
+    <button class="comp-end-btn" onclick="pLeave()">Kilépés</button>
+  </div>
+  <div id="net-board" style="flex-shrink:0;padding:8px 12px;display:flex;gap:8px;border-bottom:1px solid var(--border);overflow-x:auto;flex-wrap:nowrap"></div>
+  <div style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px" id="net-cat-area"></div>
+</div>
+
+<div class="screen" id="net-results" style="flex-direction:column;height:100dvh">
+  <div class="hdr"><div class="hdr-info"><div class="hdr-title">🏆 Végeredmény</div></div></div>
+  <div class="comp-result-body" id="net-result-body"></div>
+  <div class="comp-footer"><button class="comp-foot-btn" onclick="pLeave()">🏠 Főoldal</button></div>
 </div>
 
 <!-- ══ CÉLALAPÍTÁS OVERLAY (solo, hívás közben) ══ -->
@@ -2375,6 +2418,183 @@ function installPWA(){
     <button class="name-save-btn" onclick="saveName()">Mentés és tovább →</button>
   </div>
 </div>
+
+<script>
+/* ══════════ ONLINE VERSENY MODUL — Supabase realtime szobák ══════════ */
+const P_URL='https://spczsywkyblwhkutltxx.supabase.co';
+const P_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3pzeXdreWJsd2hrdXRsdHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MTU5NDksImV4cCI6MjA5ODQ5MTk0OX0.npj-z1dCkdE0xdf2pJx40oxe20zwTq5xu-V96NbB4Og';
+let PSB=null, pMe=null, pRoomId=null, pRoom=null, pMembers=[], pChan=null, pTimer=null, pTeam=[], pPlan={}, pTime=30;
+const P_PORTAL='https://bdgrportal.github.io/gentischerportal/';
+
+async function pInit(){
+  if(typeof supabase==='undefined'){ return; }
+  try{
+    PSB=supabase.createClient(P_URL,P_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,lock:function(n,t,fn){return fn();}}});
+    const u=await PSB.auth.getUser();
+    if(u&&u.data&&u.data.user){
+      var em=u.data.user.email; var nm=em;
+      try{ var pr=await PSB.from('profiles').select('name').eq('email',em).maybeSingle(); if(pr.data&&pr.data.name) nm=pr.data.name; }catch(e){}
+      pMe={email:em,name:nm};
+    }
+  }catch(e){ PSB=null; }
+  // Deep-link: ?room=<id> → automatikus csatlakozás (meghívóból érkezik)
+  try{ var rid=new URLSearchParams(location.search).get('room');
+    if(rid && PSB && pMe){ pJoinRoom(parseInt(rid,10)); } }catch(e){}
+}
+
+function pOpenSetup(){
+  if(typeof supabase==='undefined'||!PSB){ alert('Az online mód most nem elérhető (nincs internet vagy kapcsolat).'); return; }
+  if(!pMe){ if(confirm('Az online versenyhez előbb lépj be a portálon (ugyanabban a böngészőben). Megnyitod most?')) location.href=P_PORTAL; return; }
+  pPlan=Object.assign({},compPlan); pTime=compTimeLimit||30;
+  showScreen('net-invite'); pRenderInvite();
+}
+async function pRenderInvite(){
+  var box=document.getElementById('net-invite-list');
+  box.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px">Csapat betöltése…</div>';
+  if(!pTeam.length){
+    try{ var r=await PSB.from('profiles').select('email,name'); pTeam=(r.data||[]).filter(function(p){return p.email && p.email.toLowerCase()!==pMe.email.toLowerCase() && !/teszt/i.test(p.name||'');}); }catch(e){ pTeam=[]; }
+  }
+  pTeam.sort(function(a,b){return (a.name||'').localeCompare(b.name||'','hu');});
+  box.innerHTML=pTeam.length?pTeam.map(function(p){var nm=(p.name||p.email).replace(/"/g,'&quot;');
+    return '<label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;cursor:pointer"><input type="checkbox" class="p-inv" value="'+p.email+'" data-name="'+nm+'" style="width:18px;height:18px"><span style="font-size:14px;font-weight:600">'+(p.name||p.email)+'</span></label>';
+  }).join(''):'<div style="color:var(--muted);padding:8px">Nincs elérhető csapattag.</div>';
+}
+async function pCreateRoom(){
+  var picks=[].slice.call(document.querySelectorAll('.p-inv:checked')).map(function(c){return {email:c.value,name:c.getAttribute('data-name')};});
+  if(!picks.length){ alert('Válassz legalább 1 csapattagot!'); return; }
+  var btn=document.getElementById('net-send-btn'); if(btn){btn.disabled=true;btn.textContent='Küldés…';}
+  try{
+    var ins=await PSB.from('party_rooms').insert({host_email:pMe.email,host_name:pMe.name,plan:pPlan,points:CAT_POINTS,time_limit:pTime,status:'lobby'}).select().single();
+    if(ins.error) throw ins.error;
+    var room=ins.data;
+    var rows=[{room_id:room.id,user_email:pMe.email,display_name:pMe.name,status:'joined'}].concat(picks.map(function(p){return {room_id:room.id,user_email:p.email,display_name:p.name,status:'invited'};}));
+    var mi=await PSB.from('party_members').insert(rows); if(mi.error) throw mi.error;
+    pEnterLobby(room.id);
+  }catch(e){ alert('Nem sikerült létrehozni a szobát:\n'+(e.message||e)); if(btn){btn.disabled=false;btn.textContent='📨 Meghívók küldése & Lobby';} }
+}
+async function pJoinRoom(rid){
+  try{
+    var ex=await PSB.from('party_members').select('id,status').eq('room_id',rid).eq('user_email',pMe.email).maybeSingle();
+    if(ex.data){ if(ex.data.status!=='joined') await PSB.from('party_members').update({status:'joined'}).eq('id',ex.data.id); }
+    else { await PSB.from('party_members').insert({room_id:rid,user_email:pMe.email,display_name:pMe.name,status:'joined'}); }
+  }catch(e){}
+  pEnterLobby(rid);
+}
+async function pRefresh(){
+  try{
+    var r=await PSB.from('party_rooms').select('*').eq('id',pRoomId).maybeSingle(); if(r.data) pRoom=r.data;
+    var m=await PSB.from('party_members').select('*').eq('room_id',pRoomId).order('score',{ascending:false}); pMembers=m.data||[];
+  }catch(e){}
+}
+function pSubscribe(rid){
+  if(pChan){ try{PSB.removeChannel(pChan);}catch(e){} pChan=null; }
+  try{
+    pChan=PSB.channel('party-'+rid)
+      .on('postgres_changes',{event:'*',schema:'public',table:'party_members',filter:'room_id=eq.'+rid},pOnChange)
+      .on('postgres_changes',{event:'*',schema:'public',table:'party_rooms',filter:'id=eq.'+rid},pOnChange)
+      .subscribe();
+  }catch(e){}
+}
+async function pOnChange(){ await pRefresh(); pOnState(); }
+function pOnState(){
+  var scr=document.querySelector('.screen.active'); var id=scr?scr.id:'';
+  if(pRoom && pRoom.status==='running' && id!=='net-play' && id!=='net-results'){ pStartPlay(); return; }
+  if(pRoom && pRoom.status==='done' && id!=='net-results'){ pEndPlay(); return; }
+  if(id==='net-lobby') pRenderLobby();
+  else if(id==='net-play') pRenderPlay();
+}
+async function pEnterLobby(rid){
+  pRoomId=rid; await pRefresh(); pSubscribe(rid);
+  if(pRoom && pRoom.status==='running'){ pStartPlay(); }
+  else if(pRoom && pRoom.status==='done'){ pEndPlay(); }
+  else { showScreen('net-lobby'); pRenderLobby(); }
+}
+function _pIsHost(){ return pRoom && pMe && pRoom.host_email && pRoom.host_email.toLowerCase()===pMe.email.toLowerCase(); }
+function pPlanSummary(){ return CATS.map(function(c){var v=(pRoom&&pRoom.plan&&pRoom.plan[c])||0; return v?(CAT_NICE[c]+': '+v):null;}).filter(Boolean).join(' · ')||'nincs terv'; }
+function pRenderLobby(){
+  if(!pRoom) return;
+  document.getElementById('net-lobby-info').innerHTML='<b>'+ (pRoom.host_name||'Host') +'</b> versenye · ⏱️ '+pRoom.time_limit+' perc<br><span style="color:var(--muted);font-size:12px">'+pPlanSummary()+'</span>';
+  var joined=pMembers.filter(function(m){return m.status==='joined';}).length;
+  document.getElementById('net-lobby-players').innerHTML=pMembers.filter(function(m){return m.status!=='declined'&&m.status!=='left';}).map(function(m){
+    var badge=m.status==='joined'?'<span style="color:#4ade80;font-size:11px;font-weight:800">● belépett</span>':'<span style="color:var(--muted);font-size:11px">meghívva…</span>';
+    var host=(pRoom.host_email&&m.user_email.toLowerCase()===pRoom.host_email.toLowerCase())?' 👑':'';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 13px"><span style="font-size:14px;font-weight:600">'+(m.display_name||m.user_email)+host+'</span>'+badge+'</div>';
+  }).join('');
+  var foot=document.getElementById('net-lobby-foot');
+  if(_pIsHost()){ foot.innerHTML='<button class="comp-start-btn" onclick="pHostStart()"'+(joined>=2?'':' disabled style="opacity:.5"')+'>🚀 Verseny indítása ('+joined+' játékos)</button>'; }
+  else { foot.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:8px">⏳ Várakozás a hostra…</div>'; }
+}
+async function pHostStart(){
+  if(!_pIsHost()) return;
+  var ends=new Date(Date.now()+(pRoom.time_limit||30)*60000).toISOString();
+  try{ await PSB.from('party_rooms').update({status:'running',started_at:new Date().toISOString(),ends_at:ends}).eq('id',pRoomId); }catch(e){ alert('Nem sikerült indítani: '+(e.message||e)); return; }
+  await pRefresh(); pStartPlay();
+}
+function pFmt(sec){ var m=Math.floor(sec/60).toString().padStart(2,'0'),s=(sec%60).toString().padStart(2,'0'); return m+':'+s; }
+function pMyRow(){ return pMembers.filter(function(m){return pMe && m.user_email.toLowerCase()===pMe.email.toLowerCase();})[0]; }
+function pScoreOf(m){ var t=m.tallies||{},s=0; CATS.forEach(function(c){s+=(t[c]||0)*(CAT_POINTS[c]||1);}); return s; }
+function pStartPlay(){
+  showScreen('net-play'); pRenderPlay();
+  if(pTimer) clearInterval(pTimer); pTimer=setInterval(pTick,250);
+}
+function pTick(){
+  if(!pRoom||!pRoom.ends_at){ return; }
+  var left=Math.max(0,Math.floor((new Date(pRoom.ends_at).getTime()-Date.now())/1000));
+  var el=document.getElementById('net-timer'); if(el){ el.textContent=pFmt(left); if(left<=60) el.style.color='#ff5a5f'; }
+  if(left<=0){ clearInterval(pTimer); pTimer=null;
+    if(_pIsHost() && pRoom.status!=='done'){ try{ PSB.from('party_rooms').update({status:'done'}).eq('id',pRoomId).then(function(){}); }catch(e){} }
+    pEndPlay();
+  }
+}
+function pRenderPlay(){
+  // élő eredménytábla
+  var sorted=pMembers.slice().sort(function(a,b){return (b.score||0)-(a.score||0);});
+  var board=document.getElementById('net-board');
+  if(board) board.innerHTML=sorted.map(function(m,i){
+    var me=pMe && m.user_email.toLowerCase()===pMe.email.toLowerCase();
+    var medal=['🥇','🥈','🥉'][i]||('#'+(i+1));
+    return '<div style="background:'+(me?'rgba(91,191,194,.18)':'rgba(255,255,255,.05)')+';border:1.5px solid '+(me?'var(--teal)':'var(--border)')+';border-radius:10px;padding:7px 12px;min-width:92px;text-align:center;flex-shrink:0"><div style="font-size:10px;color:var(--muted);margin-bottom:2px;white-space:nowrap">'+medal+' '+(m.display_name||m.user_email).split(' ')[0]+(me?' (te)':'')+'</div><div style="font-size:20px;font-weight:900;color:var(--teal)">'+(m.score||0)+'</div></div>';
+  }).join('');
+  // saját kategória-gombok
+  var me=pMyRow(); var t=(me&&me.tallies)||{};
+  var area=document.getElementById('net-cat-area');
+  if(area) area.innerHTML=CATS.map(function(c){
+    return '<div class="cat-session-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><span style="font-size:14px;font-weight:700">'+CAT_NICE[c]+'</span><span style="font-size:11px;color:var(--muted)">'+CAT_POINTS[c]+'pt · te: <strong>'+(t[c]||0)+'</strong></span></div><button class="comp-cat-btn" onclick="pTap(\''+c+'\')">+1 '+CAT_NICE[c]+'</button></div>';
+  }).join('');
+}
+function pTap(cat){
+  var me=pMyRow(); if(!me){ return; }
+  var t=Object.assign({},me.tallies||{}); t[cat]=(t[cat]||0)+1;
+  me.tallies=t; me.score=pScoreOf(me);
+  if(typeof launchConfetti==='function') launchConfetti();
+  pRenderPlay();
+  try{ PSB.from('party_members').update({tallies:t,score:me.score,updated_at:new Date().toISOString()}).eq('id',me.id).then(function(){}); }catch(e){}
+}
+function pEndPlay(){
+  if(pTimer){ clearInterval(pTimer); pTimer=null; }
+  showScreen('net-results');
+  var sorted=pMembers.slice().sort(function(a,b){return (b.score||0)-(a.score||0);});
+  var ranks=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  var html='<div style="padding:14px"><div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Végső rangsor</div>'
+    +sorted.map(function(m,ri){ var me=pMe&&m.user_email.toLowerCase()===pMe.email.toLowerCase(); var t=m.tallies||{};
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)"><div style="font-size:20px;width:30px">'+(ranks[ri]||'·')+'</div><div style="flex:1"><div style="font-size:14px;font-weight:'+(me?'900':'700')+'">'+(m.display_name||m.user_email)+(me?' (te)':'')+'</div><div style="font-size:11px;color:var(--muted)">'+CATS.map(function(c){return CAT_NICE[c].split(' ')[1]+': '+(t[c]||0);}).join(' · ')+'</div></div><div style="font-size:22px;font-weight:900;color:var(--teal)">'+(m.score||0)+' pt</div></div>';
+    }).join('')+'</div>';
+  var body=document.getElementById('net-result-body'); if(body) body.innerHTML=html;
+  if(typeof launchConfetti==='function'){ launchConfetti(); setTimeout(launchConfetti,500); }
+}
+function pLeave(){
+  if(pTimer){ clearInterval(pTimer); pTimer=null; }
+  if(pChan){ try{PSB.removeChannel(pChan);}catch(e){} pChan=null; }
+  // ha lobby-ban vagyok és nem host, jelezzük a kilépést
+  try{ if(pRoomId && pMe && pRoom && pRoom.status!=='done' && !_pIsHost()){ var me=pMyRow(); if(me) PSB.from('party_members').update({status:'left'}).eq('id',me.id).then(function(){}); } }catch(e){}
+  pRoomId=null; pRoom=null; pMembers=[];
+  // vissza a saját ?room= paramot letisztázva
+  try{ if(location.search.indexOf('room=')>=0 && history.replaceState) history.replaceState(null,'',location.pathname); }catch(e){}
+  showScreen('home');
+}
+// indítás
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',pInit); else pInit();
+</script>
 
 </body>
 </html>
