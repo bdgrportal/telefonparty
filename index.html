@@ -659,8 +659,8 @@ html,body{
   </div>
 </div>
 
-<!-- Online verseny — közös Supabase projekt a portállal -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Online verseny — közös Supabase projekt a portállal (azonos verzió, mint a portál) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
 <script>
 // ═══════════════════════════════════════
@@ -2429,10 +2429,16 @@ const P_PORTAL='https://bdgrportal.github.io/gentischerportal/';
 async function pInit(){
   if(typeof supabase==='undefined'){ return; }
   try{
-    PSB=supabase.createClient(P_URL,P_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,lock:function(n,t,fn){return fn();}}});
-    const u=await PSB.auth.getUser();
-    if(u&&u.data&&u.data.user){
-      var em=u.data.user.email; var nm=em;
+    PSB=supabase.createClient(P_URL,P_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:'sb-spczsywkyblwhkutltxx-auth-token',lock:function(n,t,fn){return fn();}}});
+    // FONTOS: a portál sessionjét be kell tölteni a KLIENS MEMÓRIÁJÁBA, különben a REST-hívások
+    // anonként mennek ki (→ RLS-hiba). getSession helyreállít a localStorage-ból, setSession rögzíti.
+    var sg=await PSB.auth.getSession();
+    var sess=sg&&sg.data&&sg.data.session;
+    if(sess&&sess.access_token){ try{ await PSB.auth.setSession({access_token:sess.access_token, refresh_token:sess.refresh_token}); }catch(e){} }
+    var u=await PSB.auth.getUser();
+    var au=(u&&u.data&&u.data.user) ? u.data.user : (sess&&sess.user) || null;
+    if(au && au.email){
+      var em=au.email; var nm=em;
       try{ var pr=await PSB.from('profiles').select('name').eq('email',em).maybeSingle(); if(pr.data&&pr.data.name) nm=pr.data.name; }catch(e){}
       pMe={email:em,name:nm};
     }
@@ -2463,6 +2469,11 @@ async function pCreateRoom(){
   var picks=[].slice.call(document.querySelectorAll('.p-inv:checked')).map(function(c){return {email:c.value,name:c.getAttribute('data-name')};});
   if(!picks.length){ alert('Válassz legalább 1 csapattagot!'); return; }
   var btn=document.getElementById('net-send-btn'); if(btn){btn.disabled=true;btn.textContent='Küldés…';}
+  // biztosítjuk, hogy a hívás HITELESÍTVE menjen (a portál sessionjével), ne anonként
+  try{ var sg=await PSB.auth.getSession(); var s=sg&&sg.data&&sg.data.session;
+    if(!s||!s.access_token){ alert('Nem vagy bejelentkezve ebben a böngészőben.\nNyisd meg a portált ugyanebben a böngészőben, lépj be, majd térj vissza ide.'); if(btn){btn.disabled=false;btn.textContent='📨 Meghívók küldése & Lobby';} return; }
+    if(pMe && s.user && s.user.email) pMe.email=s.user.email;
+  }catch(e){}
   try{
     var ins=await PSB.from('party_rooms').insert({host_email:pMe.email,host_name:pMe.name,plan:pPlan,points:CAT_POINTS,time_limit:pTime,status:'lobby'}).select().single();
     if(ins.error) throw ins.error;
@@ -2470,7 +2481,12 @@ async function pCreateRoom(){
     var rows=[{room_id:room.id,user_email:pMe.email,display_name:pMe.name,status:'joined'}].concat(picks.map(function(p){return {room_id:room.id,user_email:p.email,display_name:p.name,status:'invited'};}));
     var mi=await PSB.from('party_members').insert(rows); if(mi.error) throw mi.error;
     pEnterLobby(room.id);
-  }catch(e){ alert('Nem sikerült létrehozni a szobát:\n'+(e.message||e)); if(btn){btn.disabled=false;btn.textContent='📨 Meghívók küldése & Lobby';} }
+  }catch(e){
+    var msg=(e&&e.message)||String(e);
+    if(/row-level security|violates/i.test(msg)) msg='A szerver elutasította (jogosultság).\n\nEllenőrizd:\n1) Lefutott-e a party_schema.sql a Supabase-ben?\n2) Ugyanabban a böngészőben be vagy-e lépve a portálra?\n\n('+msg+')';
+    alert('Nem sikerült létrehozni a szobát:\n'+msg);
+    if(btn){btn.disabled=false;btn.textContent='📨 Meghívók küldése & Lobby';}
+  }
 }
 async function pJoinRoom(rid){
   try{
